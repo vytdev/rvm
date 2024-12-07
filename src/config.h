@@ -108,4 +108,13 @@ typedef double   f64;
 #define clrBit(val, bit) ((val) & ~(U64C(1) << (bit)))
 #define getBit(val, bit) (((val) >> (bit)) & U64C(1))
 
+/* Reinterpret cast */
+#define reinterp_cast(t,s,n) \
+    (((union {    \
+      s src;      \
+      t trg;      \
+    }){           \
+      .src = (n), \
+    }).trg)
+
 #endif // RVM_CONFIG_H_

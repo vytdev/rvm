@@ -6,22 +6,45 @@
 #include "config.h"
 #include "util.h"
 
+/* Code for bencmarking. */
+#ifdef BENCHMARK_
+#  ifndef __linux__
+#    error "Benchmark mode only compiles on linux."
+#  endif
+#  include <time.h>
+#  define BILLION 1000000000
+static inline u64 read_mclock(void) {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec * BILLION + ts.tv_nsec;
+}
+#endif
+
 
 void show_help(void) {
   fprintf(stderr,
-    "Usage: %s [options] file [arg...]\n"
+    "Usage: %s [options] file [args...]\n"
     "\n"
     "Options:\n"
-    "      --            Stop parsing options.\n"
-    "  -h, --help        Show this help and exit\n"
+    "        --            Stop parsing options.\n"
+    "    -h, --help        Show this help and exit.\n"
+    "    -v, --version     Show version and build info.\n"
     "\n"
     "Arguments:\n"
-    "  file              The bytecode image file.\n"
-    "  arg...            Program args to pass.\n"
-    "\n"
-    "Read https://github.com/vytdev/rvm for more info.\n"
-    "Copyright (c) 2024 Vincent Yanzee J. Tan\n"
-  ,main_argv[0]);
+    "    file              The bytecode image file.\n"
+    "    args...           Program args to pass.\n"
+    "\n", main_argv[0]);
+
+  #ifdef PERF_
+  fprintf(stderr,
+    "Performance mode is enabled to enhance speed.\n"
+    "Note: Undefined behaviour may occur, though it is rare and unlikely\n"
+    "to cause issues.\n"
+    "\n");
+  #endif
+
+  fprintf(stderr, "RVM Version: %u\n", RVM_VER);
+  fprintf(stderr, "Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
 }
 
 
@@ -45,15 +68,33 @@ int run_vm(int argc, char **argv) {
     return 1;
   }
 
+  #ifdef BENCHMARK_
+  u64 inst = 0;
+  u64 start = read_mclock();
+  #endif
+
   statcd s = S_OK;
   while (vmstate == V_RUNN) {
     s = vmexec();
     if (s != S_OK) {
-      rlog("%s\n", statcd_msg(s));
+      rlog("%s\n\n", statcd_msg(s));
+      dump_regs();
       free(bin);
       return -1;
     }
+    #ifdef BENCHMARK_
+    inst++;
+    #endif
   }
+
+  #ifdef BENCHMARK_
+  u64 end = read_mclock();
+  u64 elapsed = end - start;
+  printf("BENCHMARK RESULTS:\n");
+  printf("elapsed time:       %"V64S"u ns\n",         elapsed);
+  printf("avg time per instr: %"V64S"u ns\n",         elapsed / inst);
+  printf("instr rate:         %"V64S"u inst / sec\n", inst / (elapsed / BILLION));
+  #endif
 
   vth_free();
   free(bin);
@@ -72,6 +113,7 @@ int main(int argc, char **argv) {
 
   int i;
   bool opt_help = false;
+  bool opt_version = false;
 
   for (i = 1; i < argc; i++) {
     char *arg = argv[i];
@@ -96,6 +138,10 @@ int main(int argc, char **argv) {
         opt_help = true;
         continue;
       }
+      else ifcase("version") {
+        opt_version = true;
+        continue;
+      }
       else {
         rlog("Unrecognized option: --%s\n", arg);
         return 1;
@@ -110,6 +156,9 @@ int main(int argc, char **argv) {
       case 'h':
         opt_help = true;
         break;
+      case 'v':
+        opt_version = true;
+        break;
       default:
         rlog("Unknown option: -%c\n", arg[j]);
         return 1;
@@ -120,6 +169,27 @@ int main(int argc, char **argv) {
   if (opt_help) {
     show_help();
     return 1;
+  }
+
+  /* Show version and exit. */
+  if (opt_version) {
+    printf("Redstone Virtual Machine (rvm)\n");
+    printf("Compiled on %s at %s\n", __DATE__, __TIME__);
+    printf("ABI version %u\n", RVM_VER);
+
+    #if defined(DEBUG_)
+    printf("Build type: debug\n");
+    #elif defined(PERF_)
+    printf("Build type: perf\n");
+    #else
+    printf("Build type: release\n");
+    #endif
+
+    #ifdef BENCHMARK_
+    printf("Compiled for benchmarking.\n");
+    #endif
+
+    return 0;
   }
 
   if (argc - i == 0) {

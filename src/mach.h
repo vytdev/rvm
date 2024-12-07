@@ -6,6 +6,8 @@
 
 extern char     *src;
 extern uint64_t len;
+extern uint64_t *data;
+extern uint64_t datalen;
 extern uint64_t reg[16];
 extern uint64_t *stack;
 extern uint32_t stack_len;
@@ -27,6 +29,11 @@ typedef int statcd;
 #define S_INVC    3 /* Invalid VM call */
 #define S_STOVF   4 /* Stack overflow */
 #define S_STUND   5 /* Stack underflow */
+#define S_OOB     6 /* Out of bounds access */
+
+#define setf(f) (reg[RFL] |= (f))
+#define clrf(f) (reg[RFL] &= ~(uint64_t)(f))
+#define getf(f) (reg[RFL] & (f))
 
 /* Check the magic number in src. */
 bool checkmagic(char *src, uint64_t len);
@@ -36,6 +43,9 @@ bool parse_rvmhdr(char *src, uint64_t len, rvmhdr *out);
 
 /* Return stat code strings. */
 const char *statcd_msg(statcd n);
+
+/* Dump the caller thread's registers into stderr. */
+void dump_regs(void);
 
 /* Load a program. The vm state must be in provisioning. */
 bool vload(char *prog, uint64_t sz);

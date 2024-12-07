@@ -2,8 +2,12 @@
 #
 
 CC=      gcc
-CFLAGS=  -std=c99 -MMD -MP
+CFLAGS=  -std=gnu99 -MMD -MP
 LDFLAGS= -lm
+
+ifneq ($(origin BENCHMARK), undefined)
+  CFLAGS+= -DBENCHMARK_
+endif
 
 RVM_S= rvm_main.c util.c mach.c
 RVM_O= $(RVM_S:.c=.c.o)
@@ -14,12 +18,14 @@ all: release
 build: $(RVM_T)
 
 $(RVM_T): $(RVM_O)
-	$(CC) $(LDFLAGS) -o $@ $^
+	@ echo "linking $@..."
+	@ $(CC) $(LDFLAGS) -o $@ $^
 
 %.c.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@ echo "$<  ==>  $@"
+	@ $(CC) $(CFLAGS) -c -o $@ $<
 
-.PHONY: clean debug release
+.PHONY: clean debug release perf
 
 clean:
 	rm -f $(RVM_T)
@@ -30,5 +36,9 @@ debug: CFLAGS+=  -g -DDEBUG_
 debug: LDFLAGS+= -g
 debug: build
 
-release: CFLAGS+= -O2
+release: CFLAGS+= -O3 -march=native -mtune=native -fomit-frame-pointer
 release: build
+
+perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -frename-registers
+perf: LDFLAGS+= -flto
+perf: release
