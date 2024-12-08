@@ -9,13 +9,15 @@ ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-RVM_S= rvm_main.c util.c mach.c
+RVM_S= rvm_main.c util.c mach.c dispatch.c
 RVM_O= $(RVM_S:.c=.c.o)
 RVM_D= $(RVM_S:.c=.c.d)
 RVM_T= rvm
 
 all: release
 build: $(RVM_T)
+
+-include $(RVM_D)
 
 $(RVM_T): $(RVM_O)
 	@ echo "linking $@..."
@@ -39,6 +41,6 @@ debug: build
 release: CFLAGS+= -O3 -march=native -mtune=native -fomit-frame-pointer
 release: build
 
-perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -frename-registers
-perf: LDFLAGS+= -flto
+perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -frename-registers -ftree-vectorize
+perf: LDFLAGS+= -flto -O3
 perf: release

@@ -3,14 +3,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "rvmbits.h"
+#include "thread.h"
 
 extern char     *src;
 extern uint64_t len;
 extern uint64_t *data;
 extern uint64_t datalen;
-extern uint64_t reg[16];
-extern uint64_t *stack;
-extern uint32_t stack_len;
+extern TLOCAL uint64_t reg[16];
+extern TLOCAL uint64_t *stack;
+extern TLOCAL uint32_t stack_len;
 extern char     vmstate;
 extern char     exitcode;
 
@@ -48,10 +49,10 @@ const char *statcd_msg(statcd n);
 void dump_regs(void);
 
 /* Load a program. The vm state must be in provisioning. */
-bool vload(char *prog, uint64_t sz);
+bool vload(char *prog, uint64_t sz, uint64_t *main_pc);
 
 /* Initialise thread ctx. The vm must be in running state to use this. */
-bool vth_init(uint32_t stlen);
+bool vth_init(uint32_t stlen, uint64_t start_pc);
 
 /* Free thread ctx. Not allowed in provisioning state. */
 bool vth_free(void);

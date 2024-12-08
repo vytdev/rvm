@@ -27,7 +27,7 @@
 #  else
 #    define BO_BE
 #  endif
-#elif defined(OS_UNIX) && (defined(__clang__) || (__GNUC__ >= 5))
+#elif defined(OS_UNIX) && (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
 #  if __has_include(<sys/endian.h>) || __has_include(<endian.h>)
 #    if __has_include(<endian.h>)
 #      include <endian.h>
