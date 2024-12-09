@@ -23,14 +23,11 @@ typedef struct rvmhdr {
 /*
  * Instruction encoding:
  *
- * iM       | i(12) |                M(52)            |
- * iAM      | i(12) | A(4) |            M(48)         |
- * iABM     | i(12) | A(4) | B(4) |        M(44)      |
- * iABCM    | i(12) | A(4) | B(4) | C(4) |    M(40)   |
- *
- * - i     = opcode (12-bits)
- * - A/B/C = register operand (4-bits)
- * - M     = immediate (varies)
+ * - opcode (12b)
+ * - reg A  ( 4b)
+ * - reg B  ( 4b)
+ * - reg C  ( 4b)
+ * - imm    (40b)
  */
 
 /* Instruction decoding */
@@ -38,22 +35,15 @@ typedef struct rvmhdr {
 #define rA(n) (((n) >> 12) & 0xf)
 #define rB(n) (((n) >> 16) & 0xf)
 #define rC(n) (((n) >> 20) & 0xf)
-#define m0(n) ((n) >> 12)
-#define m1(n) ((n) >> 16)
-#define m2(n) ((n) >> 20)
-#define m3(n) ((n) >> 24)
+#define im(n) ((n) >> 24)
+#define sm(n) (im(n) | (((n) >> 63) ? (U64C(0xffffff) << 40) : 0))
 
-/* Sign extension functions for the immediates, if needed */
-#define sgx0(n) ((n) | (((n) >> 51) ? (U64C(0xfff   ) << 52) : 0)) /* 52-bit imm */
-#define sgx1(n) ((n) | (((n) >> 47) ? (U64C(0xffff  ) << 48) : 0)) /* 48-bit imm */
-#define sgx2(n) ((n) | (((n) >> 43) ? (U64C(0xfffff ) << 44) : 0)) /* 44-bit imm */
-#define sgx3(n) ((n) | (((n) >> 39) ? (U64C(0xffffff) << 40) : 0)) /* 40-bit imm */
-
-/* Instruction encoding */
-#define iM(o,m) (((o) & 0xfff) | ((m)<<12))
-#define iAM(o,a,m) iM(o, ((a)&0xf) | ((m)<<4))
-#define iABM(o,a,b,m) iAM(o,a, ((b)0xf) | ((m)<<4))
-#define iABCM(o,a,b,c,m) iABM(o,a,b, ((c)&0xf) | ((m)<<4))
+#define ienc(o,a,b,c,m) \
+  (((o) & 0xfff)      | \
+  (((a) & 0xf) << 12) | \
+  (((b) & 0xf) << 16) | \
+  (((c) & 0xf) << 20) | \
+  ((m) << 24))
 
 /* Registers */
 #define R0  0
@@ -79,9 +69,11 @@ typedef struct rvmhdr {
 #define FS  (1<<2) /* sign flag */
 #define FZ  (1<<3) /* zero flag */
 #define FE  (1<<4) /* error flag */
-#define FG  (1<<5) /* greater */
-#define FL  (1<<6) /* less */
-#define FQ  (1<<7) /* equal */
+#define FG  (1<<5) /* (s) greater */
+#define FL  (1<<6) /* (s) less */
+#define FA  (1<<7) /* (u) above */
+#define FB  (1<<8) /* (u) below */
+#define FQ  (1<<9) /* equal */
 
 /*
  * The calling convention:
@@ -116,114 +108,126 @@ typedef struct rvmhdr {
  */
 
 /* Instruction set */
-enum {
+typedef enum {
 OP_NOP = 0,        /* no-op */
-OP_IVC,            /* [iM]    invoke vm call */
+OP_IVC,            /* [    M]   invoke vm call */
+OP_HLT,            /* [     ]   halt the vm's execution and enter idle */
 /* Data manipulation */
-OP_MOV,            /* [iABM]  copy reg B to reg A */
-OP_MOVI,           /* [iAM]   copy M to reg A */
-OP_MOVK,           /* [iAM]   load a pc-rel-const into reg A */
-OP_LOD,            /* [iAM]   load from data pool (data[M]) into reg A */
-OP_LODS,           /* [iAM]   load from stack (%bp + M) into reg A */
-OP_LODA,           /* [iAM]   load from arg stack */
-OP_STR,            /* [iAM]   store reg A into data pool (data[M]) */
-OP_STRS,           /* [iAM]   store reg A into stack (%bp + M) */
-OP_STRA,           /* [iAM]   store reg A into arg stack */
-OP_SWP,            /* [iABM]  swap reg A and reg B */
-OP_PUSH,           /* [iAM]   push reg A onto stack */
-OP_PUSHI,          /* [iM]    push M onto stack */
-OP_PUSHK,          /* [iM]    push a pc-rel-const onto stack */
-OP_POP,            /* [iAM]   pop the stack and store the top-item into reg A */
+OP_MOV,            /* [AB   ]   copy reg B to reg A */
+OP_MOVI,           /* [A   M]   copy M to reg A */
+OP_MOVK,           /* [A   M]   load a pc-rel-const into reg A */
+OP_LOD,            /* [A   M]   load from data pool (data[M]) into reg A */
+OP_LODS,           /* [A   M]   load from stack (%bp + M) into reg A */
+OP_LODA,           /* [A   M]   load from arg stack */
+OP_LODAR,          /* [AB   ]   load from arg stack using reg B as index */
+OP_STR,            /* [A   M]   store reg A into data pool (data[M]) */
+OP_STRS,           /* [A   M]   store reg A into stack (%bp + M) */
+OP_STRA,           /* [A   M]   store reg A into arg stack */
+OP_STRAR,          /* [AB   ]   store to arg stack using reg B as index */
+OP_SWP,            /* [AB   ]   swap reg A and reg B */
+OP_PUSH,           /* [A    ]   push reg A onto stack */
+OP_PUSHI,          /* [    M]   push M onto stack */
+OP_PUSHK,          /* [    M]   push a pc-rel-const onto stack */
+OP_POP,            /* [A    ]   pop the stack and store the top-item into reg A */
 /* Integer arithmetic */
-OP_ADD,            /* [iABCM] A = B + C */
-OP_ADDK,           /* [iABM]  A = B + K */
-OP_SUB,            /* [iABCM] A = B - C */
-OP_SUBK,           /* [iABM]  A = B - K */
-OP_SUBKR,          /* [iABM]  A = K - B */
-OP_MUL,            /* [iABCM] A = B * C */
-OP_MULK,           /* [iABM]  A = B * K */
-OP_IMUL,           /* [iABCM] A = iB * iC */
-OP_IMULK,          /* [iABM]  A = iB * iK */
-OP_DIV,            /* [iABCM] A = B / C */
-OP_DIVK,           /* [iABM]  A = B / K */
-OP_DIVKR,          /* [iABM]  A = K / B */
-OP_IDIV,           /* [iABCM] A = iB / iC */
-OP_IDIVK,          /* [iABM]  A = iB / iK */
-OP_IDIVKR,         /* [iABM]  A = iK / iB */
-OP_MOD,            /* [iABCM] A = B mod C */
-OP_MODK,           /* [iABM]  A = B mod K */
-OP_MODKR,          /* [iABM]  A = K mod B */
-OP_IMOD,           /* [iABCM] A = iB mod iC */
-OP_IMODK,          /* [iABM]  A = iB mod iK */
-OP_IMODKR,         /* [iABM]  A = iK mod iB */
-OP_INC,            /* [iAM]   A++ */
-OP_DEC,            /* [iAM]   A-- */
-OP_NEG,            /* [iABM]  A = -B */
+OP_ADD,            /* [ABC  ]   A = B + C */
+OP_ADDK,           /* [AB  M]   A = B + K */
+OP_SUB,            /* [ABC  ]   A = B - C */
+OP_SUBK,           /* [AB  M]   A = B - K */
+OP_SUBKR,          /* [AB  M]   A = K - B */
+OP_MUL,            /* [ABC  ]   A = B * C */
+OP_MULK,           /* [AB  M]   A = B * K */
+OP_IMUL,           /* [ABC  ]   A = iB * iC */
+OP_IMULK,          /* [AB  M]   A = iB * iK */
+OP_DIV,            /* [ABC  ]   A = B / C */
+OP_DIVK,           /* [AB  M]   A = B / K */
+OP_DIVKR,          /* [AB  M]   A = K / B */
+OP_IDIV,           /* [ABC  ]   A = iB / iC */
+OP_IDIVK,          /* [AB  M]   A = iB / iK */
+OP_IDIVKR,         /* [AB  M]   A = iK / iB */
+OP_MOD,            /* [ABC  ]   A = B mod C */
+OP_MODK,           /* [AB  M]   A = B mod K */
+OP_MODKR,          /* [AB  M]   A = K mod B */
+OP_IMOD,           /* [ABC  ]   A = iB mod iC */
+OP_IMODK,          /* [AB  M]   A = iB mod iK */
+OP_IMODKR,         /* [AB  M]   A = iK mod iB */
+OP_INC,            /* [A    ]   A++ */
+OP_DEC,            /* [A    ]   A-- */
+OP_NEG,            /* [AB   ]   A = -B */
 /* Bitwise ops */
-OP_AND,            /* [iABCM] A = B & C */
-OP_ANDK,           /* [iABM]  A = B & K */
-OP_IOR,            /* [iABCM] A = B | C */
-OP_IORK,           /* [iABM]  A = B | K */
-OP_XOR,            /* [iABCM] A = B ^ C */
-OP_XORK,           /* [iABM]  A = B ^ K */
-OP_NOT,            /* [iAM]   A = ~B */
-OP_SHL,            /* [iABCM] A = B << C */
-OP_SHLK,           /* [iABM]  A = B << K */
-OP_SHLKR,          /* [iABM]  A = K << B */
-OP_SHR,            /* [iABCM] A = B >> C */
-OP_SHRK,           /* [iABM]  A = B >> K */
-OP_SHRKR,          /* [iABM]  A = K >> B */
-OP_ROL,            /* [iABCM] A = B rol C */
-OP_ROLK,           /* [iABM]  A = B rol K */
-OP_ROLKR,          /* [iABM]  A = K rol B */
-OP_ROR,            /* [iABCM] A = B ror C */
-OP_RORK,           /* [iABM]  A = B ror K */
-OP_RORKR,          /* [iABM]  A = K ror B */
+OP_AND,            /* [ABC  ]   A = B & C */
+OP_ANDK,           /* [AB  M]   A = B & K */
+OP_IOR,            /* [ABC  ]   A = B | C */
+OP_IORK,           /* [AB  M]   A = B | K */
+OP_XOR,            /* [ABC  ]   A = B ^ C */
+OP_XORK,           /* [AB  M]   A = B ^ K */
+OP_NOT,            /* [AB   ]   A = ~B */
+OP_SHL,            /* [ABC  ]   A = B << C */
+OP_SHLK,           /* [AB  M]   A = B << K */
+OP_SHLKR,          /* [AB  M]   A = K << B */
+OP_SHR,            /* [ABC  ]   A = B >> C */
+OP_SHRK,           /* [AB  M]   A = B >> K */
+OP_SHRKR,          /* [AB  M]   A = K >> B */
+OP_ROL,            /* [ABC  ]   A = B rol C */
+OP_ROLK,           /* [AB  M]   A = B rol K */
+OP_ROLKR,          /* [AB  M]   A = K rol B */
+OP_ROR,            /* [ABC  ]   A = B ror C */
+OP_RORK,           /* [AB  M]   A = B ror K */
+OP_RORKR,          /* [AB  M]   A = K ror B */
 /* Flags and conditionals */
-OP_CMP,            /* [iABM]  (*) A - B */
-OP_CMPK,           /* [iAM]   (*) A - K */
-OP_CMPKR,          /* [iAM]   (*) K - A */
-OP_TEST,           /* [iABM]  (*) A & B */
-OP_TESTK,          /* [iAM]   (*) A & K */
-OP_STC,            /* [iM]    set the carry flag */
-OP_STO,            /* [iM]    set the overflow flag */
-OP_STS,            /* [iM]    set the sign flag */
-OP_STZ,            /* [iM]    set the zero flag */
-OP_STE,            /* [iM]    set the error flag */
-OP_STG,            /* [iM]    set the greater flag */
-OP_STL,            /* [iM]    set the lesser flag */
-OP_STQ,            /* [iM]    set the equal flag */
-OP_CLC,            /* [iM]    clear the carry flag */
-OP_CLO,            /* [iM]    clear the overflow flag */
-OP_CLS,            /* [iM]    clear the sign flag */
-OP_CLZ,            /* [iM]    clear the zero flag */
-OP_CLE,            /* [iM]    clear the error flag */
-OP_CLG,            /* [iM]    clear the greater flag */
-OP_CLL,            /* [iM]    clear the lesser flag */
-OP_CLQ,            /* [iM]    clear the equal flag */
+OP_CMP,            /* [AB   ]   (*) A - B */
+OP_CMPK,           /* [A   M]   (*) A - K */
+OP_CMPKR,          /* [A   M]   (*) K - A */
+OP_TEST,           /* [AB   ]   (*) A & B */
+OP_TESTK,          /* [A   M]   (*) A & K */
+OP_STC,            /* [     ]   set the carry flag */
+OP_STO,            /* [     ]   set the overflow flag */
+OP_STS,            /* [     ]   set the sign flag */
+OP_STZ,            /* [     ]   set the zero flag */
+OP_STE,            /* [     ]   set the error flag */
+OP_STG,            /* [     ]   set the greater flag */
+OP_STL,            /* [     ]   set the lesser flag */
+OP_STA,            /* [     ]   set the above flag */
+OP_STB,            /* [     ]   set the below flag */
+OP_STQ,            /* [     ]   set the equal flag */
+OP_CLC,            /* [     ]   clear the carry flag */
+OP_CLO,            /* [     ]   clear the overflow flag */
+OP_CLS,            /* [     ]   clear the sign flag */
+OP_CLZ,            /* [     ]   clear the zero flag */
+OP_CLE,            /* [     ]   clear the error flag */
+OP_CLG,            /* [     ]   clear the greater flag */
+OP_CLL,            /* [     ]   clear the lesser flag */
+OP_CLA,            /* [     ]   clear the above flag */
+OP_CLB,            /* [     ]   clear the below flag */
+OP_CLQ,            /* [     ]   clear the equal flag */
 /* Branching and flow control */
-OP_JMP,            /* [iM]    unconditional (abs) jump to pc M */
-OP_JE,             /* [iM]    (rel) jump if FQ */
-OP_JNE,            /* [iM]    (rel) jump if not FQ */
-OP_JG,             /* [iM]    (rel) jump if FG */
-OP_JGE,            /* [iM]    (rel) jump if FG or FQ */
-OP_JL,             /* [iM]    (rel) jump if FL */
-OP_JLE,            /* [iM]    (rel) jump if FL or FQ */
-OP_JC,             /* [iM]    (rel) jump if FC */
-OP_JNC,            /* [iM]    (rel) jump if not FC */
-OP_JO,             /* [iM]    (rel) jump if FO */
-OP_JNO,            /* [iM]    (rel) jump if not FO */
-OP_JS,             /* [iM]    (rel) jump if FS */
-OP_JNS,            /* [iM]    (rel) jump if not FS */
-OP_JZ,             /* [iM]    (rel) jump if FZ */
-OP_JNZ,            /* [iM]    (rel) jump if not FZ */
-OP_JX,             /* [iM]    (rel) jump if FE */
-OP_JNX,            /* [iM]    (rel) jump if not FE */
-OP_CALL,           /* [iM]    call a subroutine */
-OP_CALLR,          /* [iAM]   setup a new frame and set reg A to %pc */
-OP_RET,            /* [iM]    return to the caller */
-OP_THR,            /* [iM]    set FE, then return to the caller */
-};
+OP_JMP,            /* [    M]   unconditional (abs) jump to pc M */
+OP_JE,             /* [    M]   (rel) jump if FQ */
+OP_JNE,            /* [    M]   (rel) jump if not FQ */
+OP_JG,             /* [    M]   (rel) jump if FG */
+OP_JGE,            /* [    M]   (rel) jump if FG or FQ */
+OP_JL,             /* [    M]   (rel) jump if FL */
+OP_JLE,            /* [    M]   (rel) jump if FL or FQ */
+OP_JA,             /* [    M]   (rel) jump if FA */
+OP_JAE,            /* [    M]   (rel) jump if FA or FQ */
+OP_JB,             /* [    M]   (rel) jump if FB */
+OP_JBE,            /* [    M]   (rel) jump if FB or FQ */
+OP_JC,             /* [    M]   (rel) jump if FC */
+OP_JNC,            /* [    M]   (rel) jump if not FC */
+OP_JO,             /* [    M]   (rel) jump if FO */
+OP_JNO,            /* [    M]   (rel) jump if not FO */
+OP_JS,             /* [    M]   (rel) jump if FS */
+OP_JNS,            /* [    M]   (rel) jump if not FS */
+OP_JZ,             /* [    M]   (rel) jump if FZ */
+OP_JNZ,            /* [    M]   (rel) jump if not FZ */
+OP_JX,             /* [    M]   (rel) jump if FE */
+OP_JNX,            /* [    M]   (rel) jump if not FE */
+OP_LOOP,           /* [A   M]   decrement reg A and (rel) jump if non-zero */
+OP_CALL,           /* [    M]   call a subroutine */
+OP_CALLR,          /* [A    ]   setup a new frame and set reg A to %pc */
+OP_RET,            /* [     ]   return to the caller */
+OP_THR,            /* [     ]   set FE, then return to the caller */
+} opcode;
 
 /* VM calls (vmcalls use R0-R9 as their argument) */
 enum {

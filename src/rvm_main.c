@@ -182,14 +182,17 @@ int run_vm(int argc, char **argv) {
   u64 start = read_mclock();
   #endif
 
+  /* The execution loop. */
   statcd s = S_OK;
   while (vmstate == V_RUNN) {
     s = vmexec();
     if (s != S_OK) {
+      vmstate = V_ERRR;
       rlog("%s\n\n", statcd_msg(s));
       dump_regs();
-      free(bin);
-      return -1;
+      putc('\n', stderr);
+      exitcode = -1;
+      break;
     }
     #ifdef BENCHMARK_
     inst++;

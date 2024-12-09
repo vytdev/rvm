@@ -41,6 +41,6 @@ debug: build
 release: CFLAGS+= -O3 -march=native -mtune=native -fomit-frame-pointer
 release: build
 
-perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -frename-registers -ftree-vectorize
+perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -ftree-vectorize
 perf: LDFLAGS+= -flto -O3
 perf: release
