@@ -7,7 +7,7 @@
 00 00 00 00 00 00 00 00    # datoff
 00 00 00 00 00 00 00 00    # datlen
 
-00 # (padding for alignment)
+00                         # (padding)
 
-50 f0 ff ff ff ff ff ff
+57 00 00 ff ff ff ff ff    # jmp <somewhere_else>
 01 00 00 00 00 00 00 00    # ivc #0
