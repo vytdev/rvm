@@ -1,30 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <stdlib.h>
 #include "mach.h"
 #include "config.h"
 #include "util.h"
 
-/* Code for bencmarking. */
-#ifdef BENCHMARK_
-#  ifndef __linux__
-#    error "Benchmark mode only compiles on linux."
-#  endif
-#  include <time.h>
-#  define BILLION 1000000000
-static inline u64 read_mclock(void) {
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return ts.tv_sec * BILLION + ts.tv_nsec;
-}
-#endif
-
 /* Print help to stderr. */
 void show_help(void);
-
-/* Load and run a bytecode image. */
-int run_vm(int argc, char **argv);
 
 
 int main(int argc, char **argv) {
@@ -123,7 +105,7 @@ int main(int argc, char **argv) {
   }
 
   /* Run the VM. */
-  return run_vm(argc - i, argv + i);
+  run_vm(argc - i, argv + i);
 }
 
 
@@ -151,65 +133,4 @@ void show_help(void) {
 
   fprintf(stderr, "RVM Version: %u\n", RVM_VER);
   fprintf(stderr, "Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
-}
-
-
-int run_vm(int argc, char **argv) {
-  uvar sz = 0;
-  char *bin = util_readbin(argv[0], &sz);
-  if (!bin) {
-    rlog("Failed to load file: %s\n", argv[0]);
-    return 1;
-  }
-
-  /* The entry point. */
-  uint64_t main_pc = 0;
-
-  vmstate = V_PROV;
-  if (!vload(bin, sz, &main_pc)) {
-    rlog("Failed to load executable image.\n");
-    return 1;
-  }
-
-  vmstate = V_RUNN;
-  if (!vth_init(524288, main_pc)) {
-    rlog("Failed to initialize thread context.\n");
-    return 1;
-  }
-
-  #ifdef BENCHMARK_
-  register u64 inst = 0;
-  u64 start = read_mclock();
-  #endif
-
-  /* The execution loop. */
-  statcd s = S_OK;
-  while (vmstate == V_RUNN) {
-    s = vmexec();
-    if (s != S_OK) {
-      vmstate = V_ERRR;
-      rlog("%s\n\n", statcd_msg(s));
-      dump_regs();
-      putc('\n', stderr);
-      exitcode = -1;
-      break;
-    }
-    #ifdef BENCHMARK_
-    inst++;
-    #endif
-  }
-
-  #ifdef BENCHMARK_
-  u64 end = read_mclock();
-  u64 elapsed = end - start;
-  printf("BENCHMARK RESULTS:\n");
-  printf("elapsed time:       %"V64S"u ns\n",         elapsed);
-  printf("avg time per instr: %"V64S"u ns\n",         elapsed / inst);
-  printf("instr count:        %"V64S"u insts\n",      inst);
-  printf("instr rate:         %"V64S"u inst / sec\n", BILLION / (elapsed / inst));
-  #endif
-
-  vth_free();
-  free(bin);
-  return exitcode;
 }

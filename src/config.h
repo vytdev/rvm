@@ -84,7 +84,9 @@ typedef double   f64;
 #define MAX_U32  4294967295                     /* 2^32-1 */
 #define MAX_U64  U64C(18446744073709551615)     /* 2^64-1 */
 
-/* variable integer */
+#define BILLION 1000000000
+
+/* Variable integer */
 #ifdef RVM64
    typedef int64_t  ivar;
    typedef uint64_t uvar;
@@ -103,7 +105,7 @@ typedef double   f64;
 #  define VVARS
 #endif
 
-/* bit utils */
+/* Bit utils */
 #define setBit(val, bit) ((val) |  (U64C(1) << (bit)))
 #define clrBit(val, bit) ((val) & ~(U64C(1) << (bit)))
 #define getBit(val, bit) (((val) >> (bit)) & U64C(1))

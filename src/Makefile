@@ -9,7 +9,7 @@ ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-RVM_S= rvm_main.c util.c mach.c dispatch.c
+RVM_S= rvm_main.c util.c mach.c dispatch.c vmcall.c
 RVM_O= $(RVM_S:.c=.c.o)
 RVM_D= $(RVM_S:.c=.c.d)
 RVM_T= rvm

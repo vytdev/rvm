@@ -5,36 +5,49 @@
 #include "rvmbits.h"
 #include "thread.h"
 
+
+/* The context of the entire program */
 extern char     *src;
 extern uint64_t len;
 extern uint64_t *data;
 extern uint64_t datalen;
+
+/* Per-thread context */
 extern TLOCAL uint64_t reg[16];
 extern TLOCAL uint64_t *stack;
 extern TLOCAL uint32_t stack_len;
-extern char     vmstate;
-extern char     exitcode;
 
 /* VM states */
+extern char vmstate;
 #define V_INAC 0 /* Inactive */
 #define V_PROV 1 /* Provisioning */
 #define V_RUNN 2 /* Running */
 #define V_SUSP 3 /* Suspended */
-#define V_ERRR 4 /* Error */
+
+/* Execution modes */
+extern char exec_mode;
+#define X_PRIV  0 /* Priviledged mode */
+#define X_USER  1 /* User mode (default) */
+#define X_GUEST 2 /* Guest mode */
+#define has_perm(lvl) (exec_mode <= (lvl))
 
 /* Status codes */
 typedef int statcd;
 #define S_OK      0 /* Ok */
 #define S_ERR     1 /* Internal error */
-#define S_ILL     2 /* Illegal instruction */
-#define S_INVC    3 /* Invalid VM call */
-#define S_STOVF   4 /* Stack overflow */
-#define S_STUND   5 /* Stack underflow */
-#define S_OOB     6 /* Out of bounds access */
+#define S_PERM    2 /* Permission denied */
+#define S_ILL     3 /* Illegal instruction */
+#define S_INVC    4 /* Invalid VM call */
+#define S_STOVF   5 /* Stack overflow */
+#define S_STUND   6 /* Stack underflow */
+#define S_OOB     7 /* Out of bounds access */
 
+/* Flag manipulation */
 #define setf(f) (reg[RFL] |= (f))
+#define cmlf(f) (reg[RFL] ^= (f))
 #define clrf(f) (reg[RFL] &= ~(uint64_t)(f))
 #define getf(f) (reg[RFL] & (f))
+
 
 /* Check the magic number in src. */
 bool checkmagic(char *src, uint64_t len);
@@ -61,10 +74,37 @@ bool vth_free(void);
 statcd vpush(uint64_t v);
 statcd vpop(uint64_t *o);
 
+/* The interpreter loop. This can not-return if the bytecode
+ * invokes VM_EXIT, or it had a vm fault (statcode != S_OK). */
+void interp_loop(void);
+
+/* Load and run a bytecode image. */
+bool run_vm(int argc, char **argv);
+
 /* Execute the next instruction. */
 statcd vmexec(void);
 
 /* VM Call. */
 statcd vmcall(uint16_t ndx);
+
+
+#ifdef BENCHMARK_
+#  ifndef __linux__
+#    error "Benchmark mode only compiles on linux."
+#  endif
+
+extern TLOCAL u64 benchmark_epoch;
+extern TLOCAL u64 benchmark_insts;
+
+#define benchmark_init() (benchmark_epoch = read_mclock())
+#define benchmark_curr() (read_mclock() - benchmark_epoch)
+
+/* Get nanosecond time from the monotonic clock. */
+u64 read_mclock(void);
+
+/* Dump the current benchmark. */
+void dump_benchmark(void);
+
+#endif /* defined(BENCHMARK_) */
 
 #endif // RVM_MACH_H_

@@ -2,13 +2,13 @@
 #include "rvmbits.h"
 #include "codec.h"
 #include "config.h"
+#include "util.h"
 #include "thread.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 
 char     *src             = NULL;
 uint64_t len              = 0;
@@ -18,7 +18,7 @@ uint64_t TLOCAL reg[16];
 uint64_t TLOCAL *stack    = NULL;
 uint32_t TLOCAL stack_len = 0;
 char     vmstate          = V_INAC;
-char     exitcode         = 0;
+char     exec_mode        = X_USER;
 
 
 bool checkmagic(char *src, uint64_t len) {
@@ -52,6 +52,7 @@ const char *statcd_msg(statcd n) {
   switch (n) {
     case S_OK:      return "Ok";
     case S_ERR:     return "Internal error";
+    case S_PERM:    return "Permission denied";
     case S_ILL:     return "Illegal instruction";
     case S_INVC:    return "Invalid VM call";
     case S_STOVF:   return "Stack overflow";
@@ -169,3 +170,100 @@ statcd vpop(uint64_t *o) {
   *o = stack[--reg[RSP]];
   return S_OK;
 }
+
+
+void interp_loop(void) {
+  /* Immediate exit on error. */
+  #define vm_err(s) do { \
+      rlog("%s (%d)\n", statcd_msg((s)), (s)); \
+      dump_regs();       \
+      exit(-1);          \
+    } while (0)
+
+  /* For optimisation purposes only. */
+  interp_start:
+
+  /* Dispatch the current instruction. */
+  if (vmstate == V_RUNN) {
+    statcd s = vmexec();
+    if (s != S_OK) {
+      #ifdef BENCHMARK_
+      dump_benchmark();
+      #endif
+      vm_err(s);
+    }
+    goto interp_start;
+  }
+
+  /* VM is suspended. */
+  if (vmstate == V_SUSP)
+    goto interp_start;
+
+  #undef vm_err
+}
+
+
+bool run_vm(int argc, char **argv) {
+  uvar sz = 0;
+  char *bin = util_readbin(argv[0], &sz);
+  if (!bin) {
+    rlog("Failed to load file: %s\n", argv[0]);
+    return false;
+  }
+
+  /* The entry point. */
+  uint64_t main_pc = 0;
+
+  vmstate = V_PROV;
+  if (!vload(bin, sz, &main_pc)) {
+    rlog("Failed to load executable image.\n");
+    return false;
+  }
+
+  vmstate = V_RUNN;
+  if (!vth_init(524288, main_pc)) {
+    rlog("Failed to initialize thread context.\n");
+    return false;
+  }
+
+  #ifdef BENCHMARK_
+  benchmark_init();
+  #endif
+
+  interp_loop();
+
+  #ifdef BENCHMARK_
+  dump_benchmark();
+  #endif
+
+  vth_free();
+  free(bin);
+  return true;
+}
+
+
+/* Code for bencmarking. */
+#ifdef BENCHMARK_
+#  include <time.h>
+
+TLOCAL u64 benchmark_epoch = 0;
+TLOCAL u64 benchmark_insts = 0;
+
+
+u64 read_mclock(void) {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec * BILLION + ts.tv_nsec;
+}
+
+
+void dump_benchmark(void) {
+  u64 elapsed = benchmark_curr();
+  printf("BENCHMARK RESULTS:\n");
+  printf("elapsed time:       %"V64S"u ns\n",    elapsed);
+  printf("avg time per instr: %"V64S"u ns\n",    elapsed / benchmark_insts);
+  printf("instr count:        %"V64S"u insts\n", benchmark_insts);
+  printf("instr rate:         %"V64S"u inst / sec\n", BILLION / (elapsed / benchmark_insts));
+}
+
+#endif /* defined(BENCHMARK_) */
