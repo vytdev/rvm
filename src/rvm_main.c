@@ -38,25 +38,43 @@ int main(int argc, char **argv) {
 
     /* For long options. */
     if (len > 2 && arg[1] == '-') {
-      arg += 2;
-      #define ifcase(n) if (strcmp(arg, (n)) == 0)
+      #define lopt(n) if (strcmp(arg+2, (n)) == 0)
 
-      ifcase("help") {
+      lopt("help") {
         opt_help = true;
         continue;
       }
-      else ifcase("version") {
+
+      lopt("version") {
         opt_version = true;
         continue;
       }
-      else {
-        rlog("Unrecognized option: --%s\n", arg);
-        return 1;
-      }
 
-      #undef ifcase
+      rlog("Unrecognized option: %s\n", arg);
+      return 1;
+
+      #undef loppt
+    }
+
+    /* Single-dash options. */
+    #define opt(n) if (strcmp(arg+1, (n)) == 0)
+
+    opt("p0") {
+      exec_mode = X_PRIV;
       continue;
     }
+
+    opt("p1") {
+      exec_mode = X_USER;
+      continue;
+    }
+
+    opt("p2") {
+      exec_mode = X_GUEST;
+      continue;
+    }
+
+    #undef opt
 
     /* For short options. */
     for (int j = 1; j < len; j++) switch (arg[j]) {
@@ -117,6 +135,9 @@ void show_help(void) {
     "        --            Stop parsing options.\n"
     "    -h, --help        Show this help and exit.\n"
     "    -v, --version     Show version and build info.\n"
+    "        -p0           Run in priviledged mode (unsafe).\n"
+    "        -p1           Run in user mode (default).\n"
+    "        -p2           Run in guest mode (restricted).\n"
     "\n"
     "Arguments:\n"
     "    file              The bytecode image file.\n"
