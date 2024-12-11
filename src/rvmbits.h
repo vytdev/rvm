@@ -35,8 +35,7 @@ typedef struct rvmhdr {
 #define rA(n) (((n) >> 12) & 0xf)
 #define rB(n) (((n) >> 16) & 0xf)
 #define rC(n) (((n) >> 20) & 0xf)
-#define im(n) ((n) >> 24)
-#define sm(n) (im(n) | (((n) >> 63) ? (U64C(0xffffff) << 40) : 0))
+#define im(n) (((n) >> 24) | (((n) >> 63) ? (U64C(0xffffff) << 40) : 0))
 
 #define ienc(o,a,b,c,m) \
   (((o) & 0xfff)      | \

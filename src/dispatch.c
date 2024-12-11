@@ -623,7 +623,7 @@ vminst(OP_CLQ) {
 /* Branching and flow control. */
 
 #define br_abs()  (reg[RPC]  = im(i))
-#define br_rel()  (reg[RPC] += sm(i))
+#define br_rel()  (reg[RPC] += im(i))
 
 vminst(OP_JMP) {
   br_abs();
@@ -752,7 +752,7 @@ vminst(OP_JNX) {
 
 vminst(OP_LOOP) {
   if (--reg[rA(i)] != 0)
-    reg[RPC] += sm(i);
+    reg[RPC] += im(i);
   vmbrk();
 }
 

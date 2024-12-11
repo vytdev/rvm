@@ -89,7 +89,6 @@ void dump_regs(void) {
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   if (!prog || sz == 0 || !main_pc || vmstate != V_PROV)
     return false;
-
   rvmhdr hdr;
   if (!parse_rvmhdr(prog, sz, &hdr))
     return false;
@@ -99,14 +98,12 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
     return false;
   if (hdr.datoff + hdr.datlen * 8 >= sz)
     return false;
-
   /* Some setup. */
   for (int i = 0; i < 16; i++)
     reg[i] = 0;
   *main_pc = hdr.entry;
   src = prog;
   len = sz;
-
   /* Load the program data. */
   if (hdr.datlen != 0) {
     data = (uint64_t*)malloc(hdr.datlen * sizeof(uint64_t));
@@ -116,7 +113,6 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
     for (uint64_t i = 0; i < datalen; i++)
       data[i] = read64(prog + i * 8);
   }
-
   return true;
 }
 
@@ -179,10 +175,8 @@ void interp_loop(void) {
       dump_regs();       \
       exit(-1);          \
     } while (0)
-
   /* For optimisation purposes only. */
   interp_start:
-
   /* Dispatch the current instruction. */
   if (vmstate == V_RUNN) {
     statcd s = vmexec();
@@ -194,11 +188,9 @@ void interp_loop(void) {
     }
     goto interp_start;
   }
-
   /* VM is suspended. */
   if (vmstate == V_SUSP)
     goto interp_start;
-
   #undef vm_err
 }
 
@@ -210,32 +202,25 @@ bool run_vm(int argc, char **argv) {
     rlog("Failed to load file: %s\n", argv[0]);
     return false;
   }
-
   /* The entry point. */
   uint64_t main_pc = 0;
-
   vmstate = V_PROV;
   if (!vload(bin, sz, &main_pc)) {
     rlog("Failed to load executable image.\n");
     return false;
   }
-
   vmstate = V_RUNN;
   if (!vth_init(524288, main_pc)) {
     rlog("Failed to initialize thread context.\n");
     return false;
   }
-
   #ifdef BENCHMARK_
   benchmark_init();
   #endif
-
   interp_loop();
-
   #ifdef BENCHMARK_
   dump_benchmark();
   #endif
-
   vth_free();
   free(bin);
   return true;
