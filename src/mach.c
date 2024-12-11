@@ -244,11 +244,13 @@ u64 read_mclock(void) {
 
 void dump_benchmark(void) {
   u64 elapsed = benchmark_curr();
+  double avg_tpi = (double)elapsed / benchmark_insts;
+  double instr_rate = BILLION / avg_tpi;
   printf("BENCHMARK RESULTS:\n");
-  printf("elapsed time:       %"V64S"u ns\n",    elapsed);
-  printf("avg time per instr: %"V64S"u ns\n",    elapsed / benchmark_insts);
-  printf("instr count:        %"V64S"u insts\n", benchmark_insts);
-  printf("instr rate:         %"V64S"u inst / sec\n", BILLION / (elapsed / benchmark_insts));
+  printf("elapsed time:    %"V64S"u ns\n",    elapsed);
+  printf("instr count:     %"V64S"u insts\n", benchmark_insts);
+  printf("avg tpi:         %.3lf ns\n",       avg_tpi);
+  printf("instr rate:      %.3lf ips\n",      instr_rate);
 }
 
 #endif /* defined(BENCHMARK_) */
