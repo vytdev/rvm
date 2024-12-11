@@ -9,5 +9,5 @@
 
 00                         # (padding)
 
-57 00 00 20 00 00 00 00    # _start: jmp _start
+79 00 00 20 00 00 00 00    # _start: jmp _start
 01 00 00 00 00 00 00 00    # ivc #0

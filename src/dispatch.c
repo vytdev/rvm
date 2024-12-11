@@ -182,6 +182,11 @@ vminst(OP_ADD) {
   vmbrk();
 }
 
+vminst(OP_ADDI) {
+  reg[rA(i)] = reg[rB(i)] + im(i);
+  vmbrk();
+}
+
 vminst(OP_ADDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] + gconst(im(i));
@@ -190,6 +195,16 @@ vminst(OP_ADDK) {
 
 vminst(OP_SUB) {
   reg[rA(i)] = reg[rB(i)] - reg[rC(i)];
+  vmbrk();
+}
+
+vminst(OP_SUBI) {
+  reg[rA(i)] = reg[rB(i)] - im(i);
+  vmbrk();
+}
+
+vminst(OP_SUBIR) {
+  reg[rA(i)] = im(i) - reg[rB(i)];
   vmbrk();
 }
 
@@ -210,6 +225,11 @@ vminst(OP_MUL) {
   vmbrk();
 }
 
+vminst(OP_MULI) {
+  reg[rA(i)] = reg[rB(i)] * im(i);
+  vmbrk();
+}
+
 vminst(OP_MULK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] * gconst(im(i));
@@ -223,18 +243,33 @@ vminst(OP_IMUL) {
   vmbrk();
 }
 
+vminst(OP_IMULI) {
+  reg[rA(i)] = (uint64_t)(
+      (int64_t)reg[rB(i)] *
+      (int64_t)im(i));
+  vmbrk();
+}
+
 vminst(OP_IMULK) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
-      (int64_t)gconst(im(i))
-    );
+      (int64_t)gconst(im(i)));
   vmbrk();
 }
 
 vminst(OP_DIV) {
   reg[rA(i)] = reg[rB(i)] / reg[rC(i)];
   vmbrk();
+}
+
+vminst(OP_DIVI) {
+  reg[rA(i)] = reg[rB(i)] / im(i);
+  vmbrk();
+}
+
+vminst(OP_DIVIR) {
+  reg[rA(i)] = im(i) / reg[rB(i)];
 }
 
 vminst(OP_DIVK) {
@@ -253,6 +288,20 @@ vminst(OP_IDIV) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)reg[rC(i)]);
+  vmbrk();
+}
+
+vminst(OP_IDIVI) {
+  reg[rA(i)] = (uint64_t)(
+      (int64_t)reg[rB(i)] /
+      (int64_t)im(i));
+  vmbrk();
+}
+
+vminst(OP_IDIVIR) {
+  reg[rA(i)] = (uint64_t)(
+      (int64_t)im(i) /
+      (int64_t)reg[rB(i)]);
   vmbrk();
 }
 
@@ -277,6 +326,16 @@ vminst(OP_MOD) {
   vmbrk();
 }
 
+vminst(OP_MODI) {
+  reg[rA(i)] = reg[rB(i)] % im(i);
+  vmbrk();
+}
+
+vminst(OP_MODIR) {
+  reg[rA(i)] = im(i) % reg[rB(i)];
+  vmbrk();
+}
+
 vminst(OP_MODK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] % gconst(im(i));
@@ -293,6 +352,20 @@ vminst(OP_IMOD) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)reg[rC(i)]);
+  vmbrk();
+}
+
+vminst(OP_IMODI) {
+  reg[rA(i)] = (uint64_t)(
+      (int64_t)reg[rB(i)] %
+      (int64_t)im(i));
+  vmbrk();
+}
+
+vminst(OP_IMODIR) {
+  reg[rA(i)] = (uint64_t)(
+      (int64_t)im(i) %
+      (int64_t)reg[rB(i)]);
   vmbrk();
 }
 
@@ -334,6 +407,11 @@ vminst(OP_AND) {
   vmbrk();
 }
 
+vminst(OP_ANDI) {
+  reg[rA(i)] = reg[rB(i)] & im(i);
+  vmbrk();
+}
+
 vminst(OP_ANDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] & gconst(im(i));
@@ -345,6 +423,11 @@ vminst(OP_IOR) {
   vmbrk();
 }
 
+vminst(OP_IORI) {
+  reg[rA(i)] = reg[rB(i)] | im(i);
+  vmbrk();
+}
+
 vminst(OP_IORK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] | gconst(im(i));
@@ -353,6 +436,11 @@ vminst(OP_IORK) {
 
 vminst(OP_XOR) {
   reg[rA(i)] = reg[rB(i)] ^ reg[rC(i)];
+  vmbrk();
+}
+
+vminst(OP_XORI) {
+  reg[rA(i)] = reg[rB(i)] ^ im(i);
   vmbrk();
 }
 
@@ -372,6 +460,15 @@ vminst(OP_SHL) {
   vmbrk();
 }
 
+vminst(OP_SHLI) {
+  reg[rA(i)] = reg[rB(i)] << im(i);
+  vmbrk();
+}
+
+vminst(OP_SHLIR) {
+  reg[rA(i)] = im(i) << reg[rB(i)];
+}
+
 vminst(OP_SHLK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] << gconst(im(i));
@@ -389,6 +486,15 @@ vminst(OP_SHR) {
   vmbrk();
 }
 
+vminst(OP_SHRI) {
+  reg[rA(i)] = reg[rB(i)] >> im(i);
+  vmbrk();
+}
+
+vminst(OP_SHRIR) {
+  reg[rA(i)] = im(i) >> reg[rB(i)];
+}
+
 vminst(OP_SHRK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] >> gconst(im(i));
@@ -404,7 +510,21 @@ vminst(OP_SHRKR) {
 vminst(OP_ROL) {
   u64 v = reg[rB(i)];
   u64 c = reg[rC(i)] % 64;
-  reg[rA(i)] = (v << c) | (v >> (64-c));
+  reg[rA(i)] = rol64(v, c);
+  vmbrk();
+}
+
+vminst(OP_ROLI) {
+  u64 v = reg[rB(i)];
+  u64 c = im(i) % 64;
+  reg[rA(i)] = rol64(v, c);
+  vmbrk();
+}
+
+vminst(OP_ROLIR) {
+  u64 v = im(i);
+  u64 c = reg[rB(i)] % 64;
+  reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
@@ -412,7 +532,7 @@ vminst(OP_ROLK) {
   check_k(im(i));
   u64 v = reg[rB(i)];
   u64 c = gconst(im(i)) % 64;
-  reg[rA(i)] = (v << c) | (v >> (64-c));
+  reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
@@ -420,14 +540,28 @@ vminst(OP_ROLKR) {
   check_k(im(i));
   u64 v = gconst(im(i));
   u64 c = reg[rB(i)] % 64;
-  reg[rA(i)] = (v << c) | (v >> (64-c));
+  reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
 vminst(OP_ROR) {
   u64 v = reg[rB(i)];
   u64 c = reg[rC(i)] % 64;
-  reg[rA(i)] = (v >> c) | (v << (64-c));
+  reg[rA(i)] = ror64(v, c);
+  vmbrk();
+}
+
+vminst(OP_RORI) {
+  u64 v = reg[rB(i)];
+  u64 c = im(i) % 64;
+  reg[rA(i)] = ror64(v, c);
+  vmbrk();
+}
+
+vminst(OP_RORIR) {
+  u64 v = im(i);
+  u64 c = reg[rB(i)] % 64;
+  reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
@@ -435,7 +569,7 @@ vminst(OP_RORK) {
   check_k(im(i));
   u64 v = reg[rB(i)];
   u64 c = gconst(im(i)) % 64;
-  reg[rA(i)] = (v >> c) | (v << (64-c));
+  reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
@@ -443,7 +577,7 @@ vminst(OP_RORKR) {
   check_k(im(i));
   u64 v = gconst(im(i));
   u64 c = reg[rB(i)] % 64;
-  reg[rA(i)] = (v >> c) | (v << (64-c));
+  reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
@@ -520,6 +654,8 @@ vminst(OP_TESTK) {
 #undef do_test
 #undef sbit
 
+/* Set flags */
+
 vminst(OP_STC) {
   setf(FC);
   vmbrk();
@@ -570,6 +706,8 @@ vminst(OP_STQ) {
   vmbrk();
 }
 
+/* Clear flags */
+
 vminst(OP_CLC) {
   clrf(FC);
   vmbrk();
@@ -617,6 +755,58 @@ vminst(OP_CLB) {
 
 vminst(OP_CLQ) {
   clrf(FQ);
+  vmbrk();
+}
+
+/* Complement flags */
+
+vminst(OP_CMC) {
+  cmlf(FC);
+  vmbrk();
+}
+
+vminst(OP_CMO) {
+  cmlf(FO);
+  vmbrk();
+}
+
+vminst(OP_CMS) {
+  cmlf(FS);
+  vmbrk();
+}
+
+vminst(OP_CMZ) {
+  cmlf(FZ);
+  vmbrk();
+}
+
+vminst(OP_CME) {
+  cmlf(FE);
+  vmbrk();
+}
+
+vminst(OP_CMG) {
+  cmlf(FG);
+  vmbrk();
+}
+
+vminst(OP_CML) {
+  cmlf(FL);
+  vmbrk();
+}
+
+vminst(OP_CMA) {
+  cmlf(FA);
+  vmbrk();
+}
+
+vminst(OP_CMB) {
+  cmlf(FB);
+  vmbrk();
+}
+
+vminst(OP_CMQ) {
+  cmlf(FQ);
   vmbrk();
 }
 

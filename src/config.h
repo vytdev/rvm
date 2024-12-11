@@ -110,6 +110,10 @@ typedef double   f64;
 #define clrBit(val, bit) ((val) & ~(U64C(1) << (bit)))
 #define getBit(val, bit) (((val) >> (bit)) & U64C(1))
 
+/* Bit rotation */
+#define rol64(v, c) (((v) << (c)) | ((v) >> (64-(c))))
+#define ror64(v, c) (((v) >> (c)) | ((v) << (64-(c))))
+
 /* Reinterpret cast */
 #define reinterp_cast(t,s,n) \
     (((union {    \

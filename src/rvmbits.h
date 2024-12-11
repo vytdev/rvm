@@ -130,24 +130,37 @@ OP_PUSHK,          /* [    M]   push a pc-rel-const onto stack */
 OP_POP,            /* [A    ]   pop the stack and store the top-item into reg A */
 /* Integer arithmetic */
 OP_ADD,            /* [ABC  ]   A = B + C */
+OP_ADDI,           /* [AB  M]   A = B + M */
 OP_ADDK,           /* [AB  M]   A = B + K */
 OP_SUB,            /* [ABC  ]   A = B - C */
+OP_SUBI,           /* [AB  M]   A = B - M */
+OP_SUBIR,          /* [AB  M]   A = M - B */
 OP_SUBK,           /* [AB  M]   A = B - K */
 OP_SUBKR,          /* [AB  M]   A = K - B */
 OP_MUL,            /* [ABC  ]   A = B * C */
+OP_MULI,           /* [AB  M]   A = B * M */
 OP_MULK,           /* [AB  M]   A = B * K */
 OP_IMUL,           /* [ABC  ]   A = iB * iC */
+OP_IMULI,          /* [AB  M]   A = iB * iM */
 OP_IMULK,          /* [AB  M]   A = iB * iK */
 OP_DIV,            /* [ABC  ]   A = B / C */
+OP_DIVI,           /* [AB  M]   A = B / M */
+OP_DIVIR,          /* [AB  M]   A = M / B */
 OP_DIVK,           /* [AB  M]   A = B / K */
 OP_DIVKR,          /* [AB  M]   A = K / B */
 OP_IDIV,           /* [ABC  ]   A = iB / iC */
+OP_IDIVI,          /* [AB  M]   A = iB / iM */
+OP_IDIVIR,         /* [AB  M]   A = iM / iB */
 OP_IDIVK,          /* [AB  M]   A = iB / iK */
 OP_IDIVKR,         /* [AB  M]   A = iK / iB */
 OP_MOD,            /* [ABC  ]   A = B mod C */
+OP_MODI,           /* [AB  M]   A = B mod M */
+OP_MODIR,          /* [AB  M]   A = M mod B */
 OP_MODK,           /* [AB  M]   A = B mod K */
 OP_MODKR,          /* [AB  M]   A = K mod B */
 OP_IMOD,           /* [ABC  ]   A = iB mod iC */
+OP_IMODI,          /* [AB  M]   A = iB mod iM */
+OP_IMODIR,         /* [AB  M]   A = iM mod iB */
 OP_IMODK,          /* [AB  M]   A = iB mod iK */
 OP_IMODKR,         /* [AB  M]   A = iK mod iB */
 OP_INC,            /* [A    ]   A++ */
@@ -155,22 +168,33 @@ OP_DEC,            /* [A    ]   A-- */
 OP_NEG,            /* [AB   ]   A = -B */
 /* Bitwise ops */
 OP_AND,            /* [ABC  ]   A = B & C */
+OP_ANDI,           /* [AB  M]   A = B & M */
 OP_ANDK,           /* [AB  M]   A = B & K */
 OP_IOR,            /* [ABC  ]   A = B | C */
+OP_IORI,           /* [AB  M]   A = B | M */
 OP_IORK,           /* [AB  M]   A = B | K */
 OP_XOR,            /* [ABC  ]   A = B ^ C */
+OP_XORI,           /* [AB  M]   A = B ^ M */
 OP_XORK,           /* [AB  M]   A = B ^ K */
 OP_NOT,            /* [AB   ]   A = ~B */
 OP_SHL,            /* [ABC  ]   A = B << C */
+OP_SHLI,           /* [AB  M]   A = B << M */
+OP_SHLIR,          /* [AB  M]   A = M << B */
 OP_SHLK,           /* [AB  M]   A = B << K */
 OP_SHLKR,          /* [AB  M]   A = K << B */
 OP_SHR,            /* [ABC  ]   A = B >> C */
+OP_SHRI,           /* [AB  M]   A = B >> M */
+OP_SHRIR,          /* [AB  M]   A = M >> B */
 OP_SHRK,           /* [AB  M]   A = B >> K */
 OP_SHRKR,          /* [AB  M]   A = K >> B */
 OP_ROL,            /* [ABC  ]   A = B rol C */
+OP_ROLI,           /* [AB  M]   A = B rol M */
+OP_ROLIR,          /* [AB  M]   A = M rol B */
 OP_ROLK,           /* [AB  M]   A = B rol K */
 OP_ROLKR,          /* [AB  M]   A = K rol B */
 OP_ROR,            /* [ABC  ]   A = B ror C */
+OP_RORI,           /* [AB  M]   A = B ror M */
+OP_RORIR,          /* [AB  M]   A = M ror B */
 OP_RORK,           /* [AB  M]   A = B ror K */
 OP_RORKR,          /* [AB  M]   A = K ror B */
 /* Flags and conditionals */
@@ -199,6 +223,16 @@ OP_CLL,            /* [     ]   clear the lesser flag */
 OP_CLA,            /* [     ]   clear the above flag */
 OP_CLB,            /* [     ]   clear the below flag */
 OP_CLQ,            /* [     ]   clear the equal flag */
+OP_CMC,            /* [     ]   complement the carry flag */
+OP_CMO,            /* [     ]   complement the overflow flag */
+OP_CMS,            /* [     ]   complement the sign flag */
+OP_CMZ,            /* [     ]   complement the zero flag */
+OP_CME,            /* [     ]   complement the error flag */
+OP_CMG,            /* [     ]   complement the greater flag */
+OP_CML,            /* [     ]   complement the lesser flag */
+OP_CMA,            /* [     ]   complement the above flag */
+OP_CMB,            /* [     ]   complement the below flag */
+OP_CMQ,            /* [     ]   complement the equal flag */
 /* Branching and flow control */
 OP_JMP,            /* [    M]   unconditional (abs) jump to pc M */
 OP_JE,             /* [    M]   (rel) jump if FQ */
