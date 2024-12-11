@@ -15,7 +15,7 @@
 
 
 statcd vmexec(void) {
-  if (len < reg[RPC] + 8)
+  if (len < 8 || reg[RPC] > len - 8)
     return S_ILL;
 
   /* For benchmarking. */
