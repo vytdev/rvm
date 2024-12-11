@@ -113,6 +113,7 @@ typedef double   f64;
 /* Bit rotation */
 #define rol64(v, c) (((v) << (c)) | ((v) >> (64-(c))))
 #define ror64(v, c) (((v) >> (c)) | ((v) << (64-(c))))
+#define mod64(x) ((x) & 0x3f) /* x % 64 */
 
 /* Reinterpret cast */
 #define reinterp_cast(t,s,n) \

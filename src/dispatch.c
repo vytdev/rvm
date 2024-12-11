@@ -6,9 +6,9 @@
 #include <stdio.h>
 
 /* Macro to check if a const rel index is valid. */
-#define check_k(n) do {            \
-    if (len - reg[RPC] - (n) < 8)  \
-      return S_OOB;                \
+#define check_k(n) do { \
+    if (len < 8 || reg[RPC] + (n) > len - 8)  \
+      return S_OOB;     \
   } while (0)
 /* Macro to read a const. Must be preceded by check_k(). */
 #define gconst(n) (read64(src + reg[RPC] + (n)))
@@ -270,6 +270,7 @@ vminst(OP_DIVI) {
 
 vminst(OP_DIVIR) {
   reg[rA(i)] = im(i) / reg[rB(i)];
+  vmbrk();
 }
 
 vminst(OP_DIVK) {
@@ -455,75 +456,101 @@ vminst(OP_NOT) {
   vmbrk();
 }
 
+#define do_shift(op, a, b) (reg[rA(i)] = ((b) >= 64) ? 0 : ((a) op (b)))
+
 vminst(OP_SHL) {
-  reg[rA(i)] = reg[rB(i)] << reg[rC(i)];
+  do_shift(<<,
+      reg[rB(i)],
+      reg[rC(i)]);
   vmbrk();
 }
 
 vminst(OP_SHLI) {
-  reg[rA(i)] = reg[rB(i)] << im(i);
+  do_shift(<<,
+      reg[rB(i)],
+      im(i));
   vmbrk();
 }
 
 vminst(OP_SHLIR) {
-  reg[rA(i)] = im(i) << reg[rB(i)];
+  do_shift(<<,
+      im(i),
+      reg[rB(i)]);
+  vmbrk();
 }
 
 vminst(OP_SHLK) {
   check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] << gconst(im(i));
+  do_shift(<<,
+      reg[rB(i)],
+      gconst(im(i)));
   vmbrk();
 }
 
 vminst(OP_SHLKR) {
   check_k(im(i));
-  reg[rA(i)] = gconst(im(i)) << reg[rB(i)];
+  do_shift(<<,
+      gconst(im(i)),
+      reg[rB(i)]);
   vmbrk();
 }
 
 vminst(OP_SHR) {
-  reg[rA(i)] = reg[rB(i)] >> reg[rC(i)];
+  do_shift(>>,
+      reg[rB(i)],
+      reg[rC(i)]);
   vmbrk();
 }
 
 vminst(OP_SHRI) {
-  reg[rA(i)] = reg[rB(i)] >> im(i);
+  do_shift(>>,
+      reg[rB(i)],
+      im(i));
   vmbrk();
 }
 
 vminst(OP_SHRIR) {
-  reg[rA(i)] = im(i) >> reg[rB(i)];
+  do_shift(>>,
+      im(i),
+      reg[rB(i)]);
+  vmbrk();
 }
 
 vminst(OP_SHRK) {
   check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] >> gconst(im(i));
+  do_shift(>>,
+      reg[rB(i)],
+      gconst(im(i)));
   vmbrk();
 }
 
 vminst(OP_SHRKR) {
   check_k(im(i));
-  reg[rA(i)] = gconst(im(i)) >> reg[rB(i)];
+  do_shift(>>,
+      gconst(im(i)),
+      reg[rB(i)]);
   vmbrk();
 }
 
+#undef do_shift
+
 vminst(OP_ROL) {
   u64 v = reg[rB(i)];
-  u64 c = reg[rC(i)] % 64;
+  u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
 vminst(OP_ROLI) {
   u64 v = reg[rB(i)];
-  u64 c = im(i) % 64;
+  u64 c = mod64(im(i));
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
 vminst(OP_ROLIR) {
   u64 v = im(i);
-  u64 c = reg[rB(i)] % 64;
+  u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
@@ -531,7 +558,7 @@ vminst(OP_ROLIR) {
 vminst(OP_ROLK) {
   check_k(im(i));
   u64 v = reg[rB(i)];
-  u64 c = gconst(im(i)) % 64;
+  u64 c = mod64(gconst(im(i)));
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
@@ -539,28 +566,28 @@ vminst(OP_ROLK) {
 vminst(OP_ROLKR) {
   check_k(im(i));
   u64 v = gconst(im(i));
-  u64 c = reg[rB(i)] % 64;
+  u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
 vminst(OP_ROR) {
   u64 v = reg[rB(i)];
-  u64 c = reg[rC(i)] % 64;
+  u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
 vminst(OP_RORI) {
   u64 v = reg[rB(i)];
-  u64 c = im(i) % 64;
+  u64 c = mod64(im(i));
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
 vminst(OP_RORIR) {
   u64 v = im(i);
-  u64 c = reg[rB(i)] % 64;
+  u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
@@ -568,7 +595,7 @@ vminst(OP_RORIR) {
 vminst(OP_RORK) {
   check_k(im(i));
   u64 v = reg[rB(i)];
-  u64 c = gconst(im(i)) % 64;
+  u64 c = mod64(gconst(im(i)));
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
@@ -576,7 +603,7 @@ vminst(OP_RORK) {
 vminst(OP_RORKR) {
   check_k(im(i));
   u64 v = gconst(im(i));
-  u64 c = reg[rB(i)] % 64;
+  u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
