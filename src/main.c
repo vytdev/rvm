@@ -8,6 +8,9 @@
 /* Print help to stderr. */
 void show_help(void);
 
+/* Print version info. */
+void show_version(void);
+
 
 int main(int argc, char **argv) {
   main_argc = argc;
@@ -98,22 +101,7 @@ int main(int argc, char **argv) {
 
   /* Show version and exit. */
   if (opt_version) {
-    printf("Redstone Virtual Machine (rvm)\n");
-    printf("Compiled on %s at %s\n", __DATE__, __TIME__);
-    printf("ABI version %u\n", RVM_VER);
-
-    #if defined(DEBUG_)
-    printf("Build type: debug\n");
-    #elif defined(PERF_)
-    printf("Build type: perf\n");
-    #else
-    printf("Build type: release\n");
-    #endif
-
-    #ifdef BENCHMARK_
-    printf("Compiled for benchmarking.\n");
-    #endif
-
+    show_version();
     return 0;
   }
 
@@ -145,13 +133,30 @@ void show_help(void) {
     "\n", main_argv[0]);
 
   #ifdef PERF_
-  fprintf(stderr,
-    "Performance mode is enabled to enhance speed.\n"
-    "Note: Undefined behaviour may occur, though it is rare and unlikely\n"
-    "to cause issues.\n"
-    "\n");
+  fprintf(stderr, "Fast mode is enabled.\n");
   #endif
 
-  fprintf(stderr, "RVM Version: %u\n", RVM_VER);
+  fprintf(stderr, "Base ABI version: %u\n", RVM_VER);
   fprintf(stderr, "Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
+}
+
+
+void show_version(void) {
+  printf("Redstone Abstract Virtual Machine (rvm)\n");
+  printf("Compiled on %s at %s\n", __DATE__, __TIME__);
+  printf("Base ABI version: %u\n", RVM_VER);
+
+  /* Build type. */
+  #if defined(DEBUG_)
+  printf("Build type: debug\n");
+  #elif defined(PERF_)
+  printf("Build type: perf\n");
+  #else
+  printf("Build type: release\n");
+  #endif
+
+  /* Benchmarking note. */
+  #ifdef BENCHMARK_
+  printf("Compiled for benchmarking.\n");
+  #endif
 }

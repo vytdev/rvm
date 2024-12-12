@@ -168,13 +168,36 @@ statcd vpop(uint64_t *o) {
 }
 
 
+void exec_crash(statcd s) {
+  rlog("runtime error [%d]: %s\n",
+       s, statcd_msg(s));
+  /* Some useful stats. */
+  fprintf(stderr, "  abi version: v%u\n", RVM_VER);
+  fprintf(stderr, "  stack used:  %"V64S"u B\n", reg[RSP] * 8);
+  fprintf(stderr, "  stack size:  %"V64S"u B\n", (u64)stack_len * 8);
+  fprintf(stderr, "  flags reg:  ");
+  /* Print the contents of the %fl register. */
+  #define print_if_set(f, txt) (getf(f) ? fprintf(stderr, (" " txt)) : 0)
+  print_if_set(FC, "CF");
+  print_if_set(FO, "OF");
+  print_if_set(FS, "SF");
+  print_if_set(FZ, "ZF");
+  print_if_set(FE, "EF");
+  print_if_set(FG, "GF");
+  print_if_set(FL, "LF");
+  print_if_set(FA, "AF");
+  print_if_set(FB, "BF");
+  print_if_set(FQ, "QF");
+  #undef print_if_set
+  putc('\n', stderr); /* line-feed for the "flags reg" line */
+  /* Dump the contents of all registers. */
+  fprintf(stderr, "  registers:\n");
+  dump_regs();
+  exit(-1);
+}
+
+
 void interp_loop(void) {
-  /* Immediate exit on error. */
-  #define vm_err(s) do { \
-      rlog("%s (%d)\n", statcd_msg((s)), (s)); \
-      dump_regs();       \
-      exit(-1);          \
-    } while (0)
   /* For optimisation purposes only. */
   interp_start:
   /* Dispatch the current instruction. */
@@ -184,14 +207,13 @@ void interp_loop(void) {
       #ifdef BENCHMARK_
       dump_benchmark();
       #endif
-      vm_err(s);
+      exec_crash(s);
     }
     goto interp_start;
   }
   /* VM is suspended. */
   if (vmstate == V_SUSP)
     goto interp_start;
-  #undef vm_err
 }
 
 
@@ -246,11 +268,11 @@ void dump_benchmark(void) {
   u64 elapsed = benchmark_curr();
   double avg_tpi = (double)elapsed / benchmark_insts;
   double instr_rate = BILLION / avg_tpi;
-  printf("BENCHMARK RESULTS:\n");
-  printf("elapsed time:    %"V64S"u ns\n",    elapsed);
-  printf("instr count:     %"V64S"u insts\n", benchmark_insts);
-  printf("avg tpi:         %.3lf ns\n",       avg_tpi);
-  printf("instr rate:      %.3lf ips\n",      instr_rate);
+  printf("[benchmarking metrics]\n");
+  printf("  elapsed time:    %"V64S"u ns\n",    elapsed);
+  printf("  instr count:     %"V64S"u insts\n", benchmark_insts);
+  printf("  avg tpi:         %.3lf ns\n",       avg_tpi);
+  printf("  instr rate:      %.3lf ips\n",      instr_rate);
 }
 
 #endif /* defined(BENCHMARK_) */

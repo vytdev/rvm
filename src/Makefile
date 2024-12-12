@@ -9,17 +9,17 @@ ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-RVM_S= rvm_main.c util.c mach.c dispatch.c vmcall.c
-RVM_O= $(RVM_S:.c=.c.o)
-RVM_D= $(RVM_S:.c=.c.d)
-RVM_T= rvm
+SRC= main.c util.c mach.c dispatch.c vmcall.c
+OBJ= $(SRC:.c=.c.o)
+DEP= $(SRC:.c=.c.d)
+TRG= rvm
 
 all: release
-build: $(RVM_T)
+build: $(TRG)
 
--include $(RVM_D)
+-include $(DEP)
 
-$(RVM_T): $(RVM_O)
+$(TRG): $(OBJ)
 	@ echo "linking $@..."
 	@ $(CC) $(LDFLAGS) -o $@ $^
 
@@ -30,9 +30,9 @@ $(RVM_T): $(RVM_O)
 .PHONY: clean debug release perf
 
 clean:
-	rm -f $(RVM_T)
-	rm -f $(RVM_O)
-	rm -f $(RVM_D)
+	rm -f $(TRG)
+	rm -f $(OBJ)
+	rm -f $(DEP)
 
 debug: CFLAGS+=  -g -DDEBUG_
 debug: LDFLAGS+= -g

@@ -74,6 +74,10 @@ bool vth_free(void);
 statcd vpush(uint64_t v);
 statcd vpop(uint64_t *o);
 
+/* A noreturn function to print the caller's thread stats
+ * after a vm fau|t. */
+void exec_crash(statcd s);
+
 /* The interpreter loop. This can not-return if the bytecode
  * invokes VM_EXIT, or it had a vm fault (statcode != S_OK). */
 void interp_loop(void);
