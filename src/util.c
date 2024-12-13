@@ -82,3 +82,93 @@ void rlog(const char *fmt, ...) {
   vfprintf(stderr, fmt, arg);
   va_end(arg);
 }
+
+
+i64 p64s(char *str, int base, char **endptr) {
+  if (!str)
+    return 0;
+  u64 result = 0;
+  int sign = 1;
+  /* Parse sign. */
+  if (*str == '+') {
+    str++;
+  }
+  else if (*str == '-') {
+    str++;
+    sign = -1;
+  }
+  /* Auto-detect base. */
+  if (base == 0) {
+    if (*str == '0') {
+      str++;
+      if (*str == 'b') {
+        str++;
+        base = 2;
+      }
+      else if (*str == 'x') {
+        str++;
+        base = 16;
+      }
+      else
+        base = 8;
+    }
+    else
+      base = 10;
+  }
+  /* Validate base. */
+  if (base < 2 || base > 36)
+    return 0;
+  /* Parse the string. */
+  while (*str != '\0') {
+    char c = *str;
+    char val = 0;
+    if (c >= '0' && c <= '9')
+      val = c - '0';
+    else if (c >= 'a' && c <= 'z')
+      val = c - 'a' + 10;
+    else if (c >= 'A' && c <= 'Z')
+      val = c - 'A' + 10;
+    else
+      break;
+    if (val >= base)
+      break;
+    result = result * base + val;
+    str++;
+  }
+  /* Some finalisation. */
+  if (endptr)
+    *endptr = str;
+  return result * sign;
+}
+
+
+u64 pdatasz(char *str) {
+  if (!str)
+    return 0;
+  char *end = str;
+  u64 val = p64s(str, 10, &end);
+  /* Process data size magnitudes. */
+  u64 factor = 1;
+  #define mag(c, f) \
+    case (c): {     \
+      factor = U64C(f); \
+      end++; \
+      break; \
+    }
+  switch (*end) {
+    mag('k', 1000);          /* 10^3  */
+    mag('m', 1000000);       /* 10^6  */
+    mag('g', 1000000000);    /* 10^9  */
+    mag('t', 1000000000000); /* 10^12 */
+    mag('K', 1024);          /* 2^10  */
+    mag('M', 1048576);       /* 2^20  */
+    mag('G', 1073741824);    /* 2^30  */
+    mag('T', 1099511627776); /* 2^40  */
+  }
+  #undef mag
+  if (*end == 'B')
+    end++;
+  if (*end != '\0')
+    return MAX_U64;
+  return val * factor;
+}

@@ -22,4 +22,10 @@ char *util_readbin(char *path, uvar *size_out);
 /* Print a log with the executable name. */
 void rlog(const char *fmt, ...);
 
+/* Parse 64-bit integer from a C-str. Similar to strtoll. */
+i64 p64s(char *str, int base, char **endptr);
+
+/* Parse data sizes. */
+u64 pdatasz(char *str);
+
 #endif // RVM_UTIL_H_

@@ -14,6 +14,7 @@ char     *src             = NULL;
 uint64_t len              = 0;
 uint64_t *data            = NULL;
 uint64_t datalen          = 0;
+uint32_t default_stlen    = 524288; /* 524288 * 8 = 4MB */
 uint64_t TLOCAL reg[16];
 uint64_t TLOCAL *stack    = NULL;
 uint32_t TLOCAL stack_len = 0;
@@ -218,6 +219,10 @@ void interp_loop(void) {
 
 
 bool run_vm(int argc, char **argv) {
+  if (argc == 0 || !argv)
+    return false;
+  if (exec_mode == X_PRIV)
+    rlog("warning: Running in privileged mode.\n");
   uvar sz = 0;
   char *bin = util_readbin(argv[0], &sz);
   if (!bin) {
@@ -232,7 +237,7 @@ bool run_vm(int argc, char **argv) {
     return false;
   }
   vmstate = V_RUNN;
-  if (!vth_init(524288, main_pc)) {
+  if (!vth_init(default_stlen, main_pc)) {
     rlog("Failed to initialize thread context.\n");
     return false;
   }
@@ -268,11 +273,11 @@ void dump_benchmark(void) {
   u64 elapsed = benchmark_curr();
   double avg_tpi = (double)elapsed / benchmark_insts;
   double instr_rate = BILLION / avg_tpi;
-  printf("[benchmarking metrics]\n");
-  printf("  elapsed time:    %"V64S"u ns\n",    elapsed);
-  printf("  instr count:     %"V64S"u insts\n", benchmark_insts);
-  printf("  avg tpi:         %.3lf ns\n",       avg_tpi);
-  printf("  instr rate:      %.3lf ips\n",      instr_rate);
+  fprintf(stderr, "[benchmarking metrics]\n");
+  fprintf(stderr, "  elapsed time:    %"V64S"u ns\n",    elapsed);
+  fprintf(stderr, "  instr count:     %"V64S"u insts\n", benchmark_insts);
+  fprintf(stderr, "  avg tpi:         %.3lf ns\n",       avg_tpi);
+  fprintf(stderr, "  instr rate:      %.3lf ips\n",      instr_rate);
 }
 
 #endif /* defined(BENCHMARK_) */

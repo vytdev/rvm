@@ -11,6 +11,7 @@ extern char     *src;
 extern uint64_t len;
 extern uint64_t *data;
 extern uint64_t datalen;
+extern uint32_t default_stlen;
 
 /* Per-thread context */
 extern TLOCAL uint64_t reg[16];
@@ -26,7 +27,7 @@ extern char vmstate;
 
 /* Execution modes */
 extern char exec_mode;
-#define X_PRIV  0 /* Priviledged mode */
+#define X_PRIV  0 /* Privileged mode */
 #define X_USER  1 /* User mode (default) */
 #define X_GUEST 2 /* Guest mode */
 #define has_perm(lvl) (exec_mode <= (lvl))

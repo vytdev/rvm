@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   main_argv = argv;
 
   if (argc == 1) {
-    rlog("Type '%s -h' for more info.\n", argv[0]);
+    rlog("Type '%s -?' for more info.\n", argv[0]);
     return 1;
   }
 
@@ -39,56 +39,63 @@ int main(int argc, char **argv) {
       break;
     }
 
-    /* For long options. */
-    if (len > 2 && arg[1] == '-') {
-      #define lopt(n) if (strcmp(arg+2, (n)) == 0)
+    /* Long options. */
+    #define opt(n) \
+      if (strcmp(arg, (n)) == 0)
+    /* Extensible long options. */
+    #define xopt(n) \
+      if (strncmp(arg, (n), strlen((n))) == 0)
 
-      lopt("help") {
-        opt_help = true;
-        continue;
-      }
-
-      lopt("version") {
-        opt_version = true;
-        continue;
-      }
-
-      rlog("Unrecognized option: %s\n", arg);
-      return 1;
-
-      #undef loppt
+    opt("--help") {
+      opt_help = true;
+      continue;
     }
 
-    /* Single-dash options. */
-    #define opt(n) if (strcmp(arg+1, (n)) == 0)
+    opt("--version") {
+      opt_version = true;
+      continue;
+    }
 
-    opt("p0") {
+    opt("-p0") {
       exec_mode = X_PRIV;
       continue;
     }
 
-    opt("p1") {
+    opt("-p1") {
       exec_mode = X_USER;
       continue;
     }
 
-    opt("p2") {
+    opt("-p2") {
       exec_mode = X_GUEST;
       continue;
     }
 
+    xopt("-mss") {
+      u64 val = pdatasz(arg+4);
+      if (val == MAX_U64) {
+        rlog("Invalid value: %s\n", arg+4);
+        return 1;
+      }
+      default_stlen = val / 8;
+      continue;
+    }
+
     #undef opt
+    #undef xopt
 
     /* For short options. */
     for (int j = 1; j < len; j++) switch (arg[j]) {
       case 'h':
+      case '?':
         opt_help = true;
         break;
       case 'v':
         opt_version = true;
         break;
       default:
-        rlog("Unknown option: -%c\n", arg[j]);
+        rlog("Unknown option: %s\n", arg);
+        rlog("Type '%s -?' for more info.\n", argv[0]);
         return 1;
     }
   }
@@ -119,15 +126,19 @@ void show_help(void) {
   fprintf(stderr,
     "Usage: %s [options] file [args...]\n"
     "\n"
-    "Options:\n"
-    "        --            Stop parsing options.\n"
-    "    -h, --help        Show this help and exit.\n"
+    "    --                Stop parsing options.\n"
+    "    -h, -?, --help    Show this help and exit.\n"
     "    -v, --version     Show version and build info.\n"
-    "        -p0           Run in priviledged mode (unsafe).\n"
-    "        -p1           Run in user mode (default).\n"
-    "        -p2           Run in guest mode (restricted).\n"
     "\n"
-    "Arguments:\n"
+    "  VM execution modes:\n"
+    "    -p0               Run in privileged mode (unsafe).\n"
+    "    -p1               Run in user mode (default).\n"
+    "    -p2               Run in guest mode (restricted).\n"
+    "\n"
+    "  Machine tuning:\n"
+    "    -mss<size>        Set the default thread stack size.\n"
+    "\n"
+    "Positional arguments:\n"
     "    file              The bytecode image file.\n"
     "    args...           Program args to pass.\n"
     "\n", main_argv[0]);
@@ -143,7 +154,7 @@ void show_help(void) {
 
 void show_version(void) {
   printf("Redstone Abstract Virtual Machine (rvm)\n");
-  printf("Compiled on %s at %s\n", __DATE__, __TIME__);
+  printf("Built on %s at %s\n", __DATE__, __TIME__);
   printf("Base ABI version: %u\n", RVM_VER);
 
   /* Build type. */
