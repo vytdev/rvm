@@ -106,11 +106,10 @@ typedef double   f64;
 #endif
 
 /* Bit utils */
-#define setBit(val, bit) ((val) |  (U64C(1) << (bit)))
-#define clrBit(val, bit) ((val) & ~(U64C(1) << (bit)))
-#define getBit(val, bit) (((val) >> (bit)) & U64C(1))
-
-/* Bit rotation */
+#define bit_tst(x,p)  (((x) >> (p)) & 0x1)
+#define bit_set(x,p)  ((x) |  (U64C(1) << (p)))
+#define bit_clr(x,p)  ((x) & ~(U64C(1) << (p)))
+#define bit_cml(x,p)  ((x) ^  (U64C(1) << (p)))
 #define rol64(v, c) (((v) << (c)) | ((v) >> (64-(c))))
 #define ror64(v, c) (((v) >> (c)) | ((v) << (64-(c))))
 #define mod64(x) ((x) & 0x3f) /* x % 64 */

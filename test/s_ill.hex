@@ -9,5 +9,5 @@
 
 00                         # (padding)
 
-79 00 00 ff ff ff ff ff    # jmp <somewhere_else>
+7c 00 00 ff ff ff ff ff    # jmp <somewhere_else>
 01 00 00 00 00 00 00 00    # ivc #0

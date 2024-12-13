@@ -479,22 +479,6 @@ vminst(OP_SHLIR) {
   vmbrk();
 }
 
-vminst(OP_SHLK) {
-  check_k(im(i));
-  do_shift(<<,
-      reg[rB(i)],
-      gconst(im(i)));
-  vmbrk();
-}
-
-vminst(OP_SHLKR) {
-  check_k(im(i));
-  do_shift(<<,
-      gconst(im(i)),
-      reg[rB(i)]);
-  vmbrk();
-}
-
 vminst(OP_SHR) {
   do_shift(>>,
       reg[rB(i)],
@@ -512,22 +496,6 @@ vminst(OP_SHRI) {
 vminst(OP_SHRIR) {
   do_shift(>>,
       im(i),
-      reg[rB(i)]);
-  vmbrk();
-}
-
-vminst(OP_SHRK) {
-  check_k(im(i));
-  do_shift(>>,
-      reg[rB(i)],
-      gconst(im(i)));
-  vmbrk();
-}
-
-vminst(OP_SHRKR) {
-  check_k(im(i));
-  do_shift(>>,
-      gconst(im(i)),
       reg[rB(i)]);
   vmbrk();
 }
@@ -555,22 +523,6 @@ vminst(OP_ROLIR) {
   vmbrk();
 }
 
-vminst(OP_ROLK) {
-  check_k(im(i));
-  u64 v = reg[rB(i)];
-  u64 c = mod64(gconst(im(i)));
-  reg[rA(i)] = rol64(v, c);
-  vmbrk();
-}
-
-vminst(OP_ROLKR) {
-  check_k(im(i));
-  u64 v = gconst(im(i));
-  u64 c = mod64(reg[rB(i)]);
-  reg[rA(i)] = rol64(v, c);
-  vmbrk();
-}
-
 vminst(OP_ROR) {
   u64 v = reg[rB(i)];
   u64 c = mod64(reg[rC(i)]);
@@ -592,21 +544,71 @@ vminst(OP_RORIR) {
   vmbrk();
 }
 
-vminst(OP_RORK) {
-  check_k(im(i));
-  u64 v = reg[rB(i)];
-  u64 c = mod64(gconst(im(i)));
-  reg[rA(i)] = ror64(v, c);
+/* Bit test */
+
+#define bval_imm() (mod64(im(i)))
+#define bval_reg() (mod64(reg[rB(i)]))
+#define bt_imm() do { \
+    clrf(FZ);   \
+    if (bit_tst(reg[rA(i)], bval_imm())) \
+      setf(FZ); \
+  } while (0)
+#define bt_reg() do { \
+    clrf(FZ);   \
+    if (bit_tst(reg[rA(i)], bval_reg())) \
+      setf(FZ); \
+  } while (0)
+
+vminst(OP_BT) {
+  bt_imm();
   vmbrk();
 }
 
-vminst(OP_RORKR) {
-  check_k(im(i));
-  u64 v = gconst(im(i));
-  u64 c = mod64(reg[rB(i)]);
-  reg[rA(i)] = ror64(v, c);
+vminst(OP_BTG) {
+  bt_reg();
   vmbrk();
 }
+
+vminst(OP_BTS) {
+  bt_imm();
+  reg[rA(i)] = bit_set(reg[rA(i)], bval_imm());
+  vmbrk();
+}
+
+vminst(OP_BTSG) {
+  bt_reg();
+  reg[rA(i)] = bit_set(reg[rA(i)], bval_reg());
+  vmbrk();
+}
+
+vminst(OP_BTR) {
+  bt_imm();
+  reg[rA(i)] = bit_clr(reg[rA(i)], bval_imm());
+  vmbrk();
+}
+
+vminst(OP_BTRG) {
+  bt_reg();
+  reg[rA(i)] = bit_clr(reg[rA(i)], bval_reg());
+  vmbrk();
+}
+
+vminst(OP_BTC) {
+  bt_imm();
+  reg[rA(i)] = bit_cml(reg[rA(i)], bval_imm());
+  vmbrk();
+}
+
+vminst(OP_BTCG) {
+  bt_reg();
+  reg[rA(i)] = bit_cml(reg[rA(i)], bval_reg());
+  vmbrk();
+}
+
+#undef bval_imm
+#undef bval_reg
+#undef bt_imm
+#undef bt_reg
 
 /* Flags and conditionals. */
 
@@ -640,6 +642,16 @@ vminst(OP_CMP) {
   vmbrk();
 }
 
+vminst(OP_CMPI) {
+  do_cmp(reg[rA(i)], im(i));
+  vmbrk();
+}
+
+vminst(OP_CMPIR) {
+  do_cmp(im(i), reg[rA(i)]);
+  vmbrk();
+}
+
 vminst(OP_CMPK) {
   check_k(im(i));
   u64 k = gconst(im(i));
@@ -668,6 +680,11 @@ vminst(OP_CMPKR) {
 
 vminst(OP_TEST) {
   do_test(reg[rA(i)], reg[rB(i)]);
+  vmbrk();
+}
+
+vminst(OP_TESTI) {
+  do_test(reg[rA(i)], im(i));
   vmbrk();
 }
 
@@ -844,6 +861,11 @@ vminst(OP_CMQ) {
 
 vminst(OP_JMP) {
   br_abs();
+  vmbrk();
+}
+
+vminst(OP_JMPN) {
+  br_rel();
   vmbrk();
 }
 

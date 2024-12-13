@@ -180,28 +180,32 @@ OP_NOT,            /* [AB   ]   A = ~B */
 OP_SHL,            /* [ABC  ]   A = B << C */
 OP_SHLI,           /* [AB  M]   A = B << M */
 OP_SHLIR,          /* [AB  M]   A = M << B */
-OP_SHLK,           /* [AB  M]   A = B << K */
-OP_SHLKR,          /* [AB  M]   A = K << B */
 OP_SHR,            /* [ABC  ]   A = B >> C */
 OP_SHRI,           /* [AB  M]   A = B >> M */
 OP_SHRIR,          /* [AB  M]   A = M >> B */
-OP_SHRK,           /* [AB  M]   A = B >> K */
-OP_SHRKR,          /* [AB  M]   A = K >> B */
 OP_ROL,            /* [ABC  ]   A = B rol C */
 OP_ROLI,           /* [AB  M]   A = B rol M */
 OP_ROLIR,          /* [AB  M]   A = M rol B */
-OP_ROLK,           /* [AB  M]   A = B rol K */
-OP_ROLKR,          /* [AB  M]   A = K rol B */
 OP_ROR,            /* [ABC  ]   A = B ror C */
 OP_RORI,           /* [AB  M]   A = B ror M */
 OP_RORIR,          /* [AB  M]   A = M ror B */
-OP_RORK,           /* [AB  M]   A = B ror K */
-OP_RORKR,          /* [AB  M]   A = K ror B */
+/* Bit test instructions */
+OP_BT,             /* [A   M]   test bit M of reg A */
+OP_BTG,            /* [AB   ]   test bit B of reg A */
+OP_BTS,            /* [A   M]   test bit M of reg A then set it */
+OP_BTSG,           /* [AB   ]   test bit B of reg A then set it */
+OP_BTR,            /* [A   M]   test bit M of reg A then reset it */
+OP_BTRG,           /* [AB   ]   test bit B of reg A then reset it */
+OP_BTC,            /* [A   M]   test bit M of reg A then complement it */
+OP_BTCG,           /* [AB   ]   test bit B of reg A then complement it */
 /* Flags and conditionals */
 OP_CMP,            /* [AB   ]   (*) A - B */
+OP_CMPI,           /* [A   M]   (*) A - M */
+OP_CMPIR,          /* [A   M]   (*) M - A */
 OP_CMPK,           /* [A   M]   (*) A - K */
 OP_CMPKR,          /* [A   M]   (*) K - A */
 OP_TEST,           /* [AB   ]   (*) A & B */
+OP_TESTI,          /* [A   M]   (*) A & M */
 OP_TESTK,          /* [A   M]   (*) A & K */
 OP_STC,            /* [     ]   set the carry flag */
 OP_STO,            /* [     ]   set the overflow flag */
@@ -235,6 +239,7 @@ OP_CMB,            /* [     ]   complement the below flag */
 OP_CMQ,            /* [     ]   complement the equal flag */
 /* Branching and flow control */
 OP_JMP,            /* [    M]   unconditional (abs) jump to pc M */
+OP_JMPN,           /* [    M]   unconditional (rel) jump by offset M */
 OP_JE,             /* [    M]   (rel) jump if FQ */
 OP_JNE,            /* [    M]   (rel) jump if not FQ */
 OP_JG,             /* [    M]   (rel) jump if FG */
