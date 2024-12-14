@@ -75,19 +75,14 @@ bool vth_free(void);
 statcd vpush(uint64_t v);
 statcd vpop(uint64_t *o);
 
-/* A noreturn function to print the caller's thread stats
- * after a vm fau|t. */
-void exec_crash(statcd s);
+/* Print the caller thread's stats as a runtime error. */
+void show_err(statcd s);
 
-/* The interpreter loop. This can not-return if the bytecode
- * invokes VM_EXIT, or it had a vm fault (statcode != S_OK). */
-void interp_loop(void);
+/* Load and run a bytecode image. [noreturn] */
+void run_vm(int argc, char **argv);
 
-/* Load and run a bytecode image. */
-bool run_vm(int argc, char **argv);
-
-/* Execute the next instruction. */
-statcd vmexec(void);
+/* Interpret the bytecode for the current thread. [noreturn if error] */
+void vmexec(void);
 
 /* VM Call. */
 statcd vmcall(uint16_t ndx);
@@ -99,16 +94,31 @@ statcd vmcall(uint16_t ndx);
 #  endif
 
 extern TLOCAL u64 benchmark_epoch;
+extern TLOCAL u64 benchmark_break;
 extern TLOCAL u64 benchmark_insts;
 
+#define benchmark_incr() (benchmark_insts++)
 #define benchmark_init() (benchmark_epoch = read_mclock())
 #define benchmark_curr() (read_mclock() - benchmark_epoch)
+#define benchmark_tag()  (benchmark_break = benchmark_curr())
 
 /* Get nanosecond time from the monotonic clock. */
 u64 read_mclock(void);
 
 /* Dump the current benchmark. */
 void dump_benchmark(void);
+
+#else
+
+#define benchmark_epoch
+#define benchmark_break
+#define benchmark_insts
+#define benchmark_incr()
+#define benchmark_init()
+#define benchmark_curr()
+#define benchmark_tag()
+#define read_mclock() (U64C(0))
+#define dump_benchmark()
 
 #endif /* defined(BENCHMARK_) */
 

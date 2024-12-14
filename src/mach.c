@@ -169,8 +169,8 @@ statcd vpop(uint64_t *o) {
 }
 
 
-void exec_crash(statcd s) {
-  rlog("runtime error [%d]: %s\n",
+void show_err(statcd s) {
+  rlog("vm fault [%d]: %s\n",
        s, statcd_msg(s));
   /* Some useful stats. */
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
@@ -194,63 +194,41 @@ void exec_crash(statcd s) {
   /* Dump the contents of all registers. */
   fprintf(stderr, "  registers:\n");
   dump_regs();
-  exit(-1);
 }
 
 
-void interp_loop(void) {
-  /* For optimisation purposes only. */
-  interp_start:
-  /* Dispatch the current instruction. */
-  if (vmstate == V_RUNN) {
-    statcd s = vmexec();
-    if (s != S_OK) {
-      #ifdef BENCHMARK_
-      dump_benchmark();
-      #endif
-      exec_crash(s);
-    }
-    goto interp_start;
+void run_vm(int argc, char **argv) {
+  #define ret_fail() exit(-1)
+  #define ret_succ() exit(0)
+  if (argc == 0 || !argv) {
+    rlog("Internal error.\n");
+    ret_fail();
   }
-  /* VM is suspended. */
-  if (vmstate == V_SUSP)
-    goto interp_start;
-}
-
-
-bool run_vm(int argc, char **argv) {
-  if (argc == 0 || !argv)
-    return false;
-  if (exec_mode == X_PRIV)
-    rlog("warning: Running in privileged mode.\n");
   uvar sz = 0;
   char *bin = util_readbin(argv[0], &sz);
   if (!bin) {
     rlog("Failed to load file: %s\n", argv[0]);
-    return false;
+    ret_fail();
   }
   /* The entry point. */
   uint64_t main_pc = 0;
   vmstate = V_PROV;
   if (!vload(bin, sz, &main_pc)) {
     rlog("Failed to load executable image.\n");
-    return false;
+    ret_fail();
   }
   vmstate = V_RUNN;
   if (!vth_init(default_stlen, main_pc)) {
     rlog("Failed to initialize thread context.\n");
-    return false;
+    ret_fail();
   }
-  #ifdef BENCHMARK_
-  benchmark_init();
-  #endif
-  interp_loop();
-  #ifdef BENCHMARK_
-  dump_benchmark();
-  #endif
+  if (exec_mode == X_PRIV)
+    rlog("warning: Running in privileged mode.\n");
+  /* Run the vm. */
+  vmexec();
   vth_free();
   free(bin);
-  return true;
+  ret_succ();
 }
 
 
@@ -259,6 +237,7 @@ bool run_vm(int argc, char **argv) {
 #  include <time.h>
 
 TLOCAL u64 benchmark_epoch = 0;
+TLOCAL u64 benchmark_break = 0;
 TLOCAL u64 benchmark_insts = 0;
 
 
@@ -270,7 +249,7 @@ u64 read_mclock(void) {
 
 
 void dump_benchmark(void) {
-  u64 elapsed = benchmark_curr();
+  u64 elapsed = benchmark_break;
   double avg_tpi = (double)elapsed / benchmark_insts;
   double instr_rate = BILLION / avg_tpi;
   fprintf(stderr, "[benchmarking metrics]\n");

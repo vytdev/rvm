@@ -9,7 +9,7 @@ ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-SRC= main.c util.c mach.c dispatch.c vmcall.c
+SRC= main.c util.c mach.c exec.c vmcall.c
 OBJ= $(SRC:.c=.c.o)
 DEP= $(SRC:.c=.c.d)
 TRG= rvm

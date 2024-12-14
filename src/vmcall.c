@@ -16,9 +16,8 @@ switch (ndx) {
 
 
 defcall(VM_EXIT) {
-  #ifdef BENCHMARK_
+  benchmark_tag();
   dump_benchmark();
-  #endif
   /* Allocated resources are automatically reclaimed by the OS,
      so using exit() directly is safe for the VM. However, the
      user program is responsible for cleaning up critical

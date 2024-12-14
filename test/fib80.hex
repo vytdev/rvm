@@ -1,0 +1,26 @@
+# fib(80) = 23,416,728,348,467,685  (must be in %r0)
+
+7f 52 56 4d                # magic
+01 00                      # abi_ver
+00                         # type (RTYP_EXEC)
+20 00 00 00 00 00 00 00    # entry
+00 00 00 00 00 00 00 00    # datoff
+00 00 00 00 00 00 00 00    # datlen
+
+00                         # (padding)
+
+04 10 00 50 00 00 00 00    # mov %r1, #80
+57 10 00 01 00 00 00 00    # cmp %r1, #1
+80 00 00 10 00 00 00 00    # jg _cont
+03 00 01 00 00 00 00 00    # mov %r0, %r1
+01 00 00 00 00 00 00 00    # ivc #0
+17 10 01 01 00 00 00 00    # _cont: sub %r1, %r1, #1
+04 20 00 00 00 00 00 00    # mov %r2, #0
+04 30 00 01 00 00 00 00    # mov %r3, #1
+0e 20 03 00 00 00 00 00    # _loop: swp %r2, %r3
+13 30 23 00 00 00 00 00    # add %r3, %r3, %r2
+92 10 00 e8 ff ff ff ff    # loop %r1, _loop
+03 00 03 00 00 00 00 00    # mov %r0, %r3
+
+# Not exiting here will crash the vm causing it
+# to dump the registers, which is what we need.

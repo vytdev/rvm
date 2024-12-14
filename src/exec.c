@@ -2,8 +2,13 @@
 #include "codec.h"
 #include "rvmbits.h"
 #include "util.h"
+// #include "thread.h" /* For thread_yield(). */
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+/* Prototype for the vm__interpreter() function. */
+static statcd vm__interpreter(void);
 
 /* Macro to check if a const rel index is valid. */
 #define check_k(n) do { \
@@ -14,14 +19,42 @@
 #define gconst(n) (read64(src + reg[RPC] + (n)))
 
 
-statcd vmexec(void) {
+void vmexec(void) {
+  /* vmexec() is a wrapper to vm__interpreter(). */
+  benchmark_init();
+  statcd s = vm__interpreter();
+  benchmark_tag();
+
+  /* Interpreter complete. Additional state checks. */
+  if (s != S_OK)
+    show_err(s);
+
+  dump_benchmark();
+
+  if (s != S_OK) {
+    rlog("Error is unrecoverable. Aborting...\n");
+    exit(-1);
+  }
+}
+
+
+static statcd vm__interpreter(void) {
+  interp_start:
+
+  if (vmstate == V_SUSP) {
+    // TODO: Uncomment this once multi-threading is
+    // supported.
+    //
+    //thread_yield();
+    goto interp_start; /* This is inefficient. */
+  }
+
+  /* Make sure we're still reading within the bytecode. */
   if (len < 8 || reg[RPC] > len - 8)
     return S_ILL;
 
   /* For benchmarking. */
-  #ifdef BENCHMARK_
-  benchmark_insts++;
-  #endif
+  benchmark_incr();
 
   /* Fetch the next instruction. */
   uint64_t i = read64(src + reg[RPC]);
@@ -29,20 +62,23 @@ statcd vmexec(void) {
 
 /* Macros for opcode implementation. */
 switch ((opcode)op(i)) {
-#define vminst(n) case (n):
-#define vmbrk()   return S_OK
+#define vminst(n) case (OP_ ## n):
+#define vmbrk()   goto interp_start
 
 /* Miscellaneous. */
 
-vminst(OP_NOP) {
+vminst(NOP) {
   vmbrk();
 }
 
-vminst(OP_IVC) {
-  return vmcall(im(i) & 0xffff);
+vminst(IVC) {
+  statcd s = vmcall(im(i) & 0xffff);
+  if (s != S_OK)
+    return s;
+  vmbrk();
 }
 
-vminst(OP_HLT) {
+vminst(HLT) {
   vmstate = V_SUSP;
   rlog("Execution suspended.\n");
   fprintf(stderr,
@@ -57,23 +93,23 @@ vminst(OP_HLT) {
 
 /* Data manipulation. */
 
-vminst(OP_MOV) {
+vminst(MOV) {
   reg[rA(i)] = reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_MOVI) {
+vminst(MOVI) {
   reg[rA(i)] = im(i);
   vmbrk();
 }
 
-vminst(OP_MOVK) {
+vminst(MOVK) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_LOD) {
+vminst(LOD) {
   u64 idx = im(i);
   if (idx >= datalen)
     return S_OOB;
@@ -81,7 +117,7 @@ vminst(OP_LOD) {
   vmbrk();
 }
 
-vminst(OP_LODS) {
+vminst(LODS) {
   u64 idx = im(i);
   if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
     return S_OOB;
@@ -89,7 +125,7 @@ vminst(OP_LODS) {
   vmbrk();
 }
 
-vminst(OP_LODA) {
+vminst(LODA) {
   u64 idx = reg[RBP] - 3 - im(i);
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
@@ -97,7 +133,7 @@ vminst(OP_LODA) {
   vmbrk();
 }
 
-vminst(OP_LODAR) {
+vminst(LODAR) {
   u64 idx = reg[RBP] - 3 - reg[rB(i)];
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
@@ -105,7 +141,7 @@ vminst(OP_LODAR) {
   vmbrk();
 }
 
-vminst(OP_STR) {
+vminst(STR) {
   u64 idx = im(i);
   if (idx >= datalen)
     return S_OOB;
@@ -113,7 +149,7 @@ vminst(OP_STR) {
   vmbrk();
 }
 
-vminst(OP_STRS) {
+vminst(STRS) {
   u64 idx = im(i);
   if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
     return S_OOB;
@@ -121,7 +157,7 @@ vminst(OP_STRS) {
   vmbrk();
 }
 
-vminst(OP_STRA) {
+vminst(STRA) {
   u64 idx = reg[RBP] - 3 - im(i);
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
@@ -129,7 +165,7 @@ vminst(OP_STRA) {
   vmbrk();
 }
 
-vminst(OP_STRAR) {
+vminst(STRAR) {
   u64 idx = reg[RBP] - 3 - reg[rB(i)];
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
@@ -137,28 +173,28 @@ vminst(OP_STRAR) {
   vmbrk();
 }
 
-vminst(OP_SWP) {
+vminst(SWP) {
   u64 tmp = reg[rA(i)];
   reg[rA(i)] = reg[rB(i)];
   reg[rB(i)] = tmp;
   vmbrk();
 }
 
-vminst(OP_PUSH) {
+vminst(PUSH) {
   statcd s = vpush(reg[rA(i)]);
   if (s != S_OK)
     return s;
   vmbrk();
 }
 
-vminst(OP_PUSHI) {
+vminst(PUSHI) {
   statcd s = vpush(im(i));
   if (s != S_OK)
     return s;
   vmbrk();
 }
 
-vminst(OP_PUSHK) {
+vminst(PUSHK) {
   check_k(im(i));
   statcd s = vpush(gconst(im(i)));
   if (s != S_OK)
@@ -166,7 +202,7 @@ vminst(OP_PUSHK) {
   vmbrk();
 }
 
-vminst(OP_POP) {
+vminst(POP) {
   if (reg[RSP] <= reg[RBP])
     return S_STUND;
   statcd s = vpop(&reg[rA(i)]);
@@ -177,80 +213,80 @@ vminst(OP_POP) {
 
 /* Integer arithmetic. */
 
-vminst(OP_ADD) {
+vminst(ADD) {
   reg[rA(i)] = reg[rB(i)] + reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_ADDI) {
+vminst(ADDI) {
   reg[rA(i)] = reg[rB(i)] + im(i);
   vmbrk();
 }
 
-vminst(OP_ADDK) {
+vminst(ADDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] + gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_SUB) {
+vminst(SUB) {
   reg[rA(i)] = reg[rB(i)] - reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_SUBI) {
+vminst(SUBI) {
   reg[rA(i)] = reg[rB(i)] - im(i);
   vmbrk();
 }
 
-vminst(OP_SUBIR) {
+vminst(SUBIR) {
   reg[rA(i)] = im(i) - reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_SUBK) {
+vminst(SUBK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] - gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_SUBKR) {
+vminst(SUBKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) - reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_MUL) {
+vminst(MUL) {
   reg[rA(i)] = reg[rB(i)] * reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_MULI) {
+vminst(MULI) {
   reg[rA(i)] = reg[rB(i)] * im(i);
   vmbrk();
 }
 
-vminst(OP_MULK) {
+vminst(MULK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] * gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_IMUL) {
+vminst(IMUL) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
       (int64_t)reg[rC(i)]);
   vmbrk();
 }
 
-vminst(OP_IMULI) {
+vminst(IMULI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
       (int64_t)im(i));
   vmbrk();
 }
 
-vminst(OP_IMULK) {
+vminst(IMULK) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
@@ -258,55 +294,55 @@ vminst(OP_IMULK) {
   vmbrk();
 }
 
-vminst(OP_DIV) {
+vminst(DIV) {
   reg[rA(i)] = reg[rB(i)] / reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_DIVI) {
+vminst(DIVI) {
   reg[rA(i)] = reg[rB(i)] / im(i);
   vmbrk();
 }
 
-vminst(OP_DIVIR) {
+vminst(DIVIR) {
   reg[rA(i)] = im(i) / reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_DIVK) {
+vminst(DIVK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] / gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_DIVKR) {
+vminst(DIVKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) / reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_IDIV) {
+vminst(IDIV) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)reg[rC(i)]);
   vmbrk();
 }
 
-vminst(OP_IDIVI) {
+vminst(IDIVI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)im(i));
   vmbrk();
 }
 
-vminst(OP_IDIVIR) {
+vminst(IDIVIR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)im(i) /
       (int64_t)reg[rB(i)]);
   vmbrk();
 }
 
-vminst(OP_IDIVK) {
+vminst(IDIVK) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
@@ -314,7 +350,7 @@ vminst(OP_IDIVK) {
   vmbrk();
 }
 
-vminst(OP_IDIVKR) {
+vminst(IDIVKR) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)gconst(im(i)) /
@@ -322,55 +358,55 @@ vminst(OP_IDIVKR) {
   vmbrk();
 }
 
-vminst(OP_MOD) {
+vminst(MOD) {
   reg[rA(i)] = reg[rB(i)] % reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_MODI) {
+vminst(MODI) {
   reg[rA(i)] = reg[rB(i)] % im(i);
   vmbrk();
 }
 
-vminst(OP_MODIR) {
+vminst(MODIR) {
   reg[rA(i)] = im(i) % reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_MODK) {
+vminst(MODK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] % gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_MODKR) {
+vminst(MODKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) % reg[rB(i)];
   vmbrk();
 }
 
-vminst(OP_IMOD) {
+vminst(IMOD) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)reg[rC(i)]);
   vmbrk();
 }
 
-vminst(OP_IMODI) {
+vminst(IMODI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)im(i));
   vmbrk();
 }
 
-vminst(OP_IMODIR) {
+vminst(IMODIR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)im(i) %
       (int64_t)reg[rB(i)]);
   vmbrk();
 }
 
-vminst(OP_IMODK) {
+vminst(IMODK) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
@@ -378,7 +414,7 @@ vminst(OP_IMODK) {
   vmbrk();
 }
 
-vminst(OP_IMODKR) {
+vminst(IMODKR) {
   check_k(im(i));
   reg[rA(i)] = (uint64_t)(
       (int64_t)gconst(im(i)) %
@@ -386,114 +422,114 @@ vminst(OP_IMODKR) {
   vmbrk();
 }
 
-vminst(OP_INC) {
+vminst(INC) {
   reg[rA(i)]++;
   vmbrk();
 }
 
-vminst(OP_DEC) {
+vminst(DEC) {
   reg[rA(i)]--;
   vmbrk();
 }
 
-vminst(OP_NEG) {
+vminst(NEG) {
   reg[rA(i)] = -reg[rB(i)];
   vmbrk();
 }
 
 /* Bitwise ops. */
 
-vminst(OP_AND) {
+vminst(AND) {
   reg[rA(i)] = reg[rB(i)] & reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_ANDI) {
+vminst(ANDI) {
   reg[rA(i)] = reg[rB(i)] & im(i);
   vmbrk();
 }
 
-vminst(OP_ANDK) {
+vminst(ANDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] & gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_IOR) {
+vminst(IOR) {
   reg[rA(i)] = reg[rB(i)] | reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_IORI) {
+vminst(IORI) {
   reg[rA(i)] = reg[rB(i)] | im(i);
   vmbrk();
 }
 
-vminst(OP_IORK) {
+vminst(IORK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] | gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_XOR) {
+vminst(XOR) {
   reg[rA(i)] = reg[rB(i)] ^ reg[rC(i)];
   vmbrk();
 }
 
-vminst(OP_XORI) {
+vminst(XORI) {
   reg[rA(i)] = reg[rB(i)] ^ im(i);
   vmbrk();
 }
 
-vminst(OP_XORK) {
+vminst(XORK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] ^ gconst(im(i));
   vmbrk();
 }
 
-vminst(OP_NOT) {
+vminst(NOT) {
   reg[rA(i)] = ~reg[rB(i)];
   vmbrk();
 }
 
 #define do_shift(op, a, b) (reg[rA(i)] = ((b) >= 64) ? 0 : ((a) op (b)))
 
-vminst(OP_SHL) {
+vminst(SHL) {
   do_shift(<<,
       reg[rB(i)],
       reg[rC(i)]);
   vmbrk();
 }
 
-vminst(OP_SHLI) {
+vminst(SHLI) {
   do_shift(<<,
       reg[rB(i)],
       im(i));
   vmbrk();
 }
 
-vminst(OP_SHLIR) {
+vminst(SHLIR) {
   do_shift(<<,
       im(i),
       reg[rB(i)]);
   vmbrk();
 }
 
-vminst(OP_SHR) {
+vminst(SHR) {
   do_shift(>>,
       reg[rB(i)],
       reg[rC(i)]);
   vmbrk();
 }
 
-vminst(OP_SHRI) {
+vminst(SHRI) {
   do_shift(>>,
       reg[rB(i)],
       im(i));
   vmbrk();
 }
 
-vminst(OP_SHRIR) {
+vminst(SHRIR) {
   do_shift(>>,
       im(i),
       reg[rB(i)]);
@@ -502,42 +538,42 @@ vminst(OP_SHRIR) {
 
 #undef do_shift
 
-vminst(OP_ROL) {
+vminst(ROL) {
   u64 v = reg[rB(i)];
   u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
-vminst(OP_ROLI) {
+vminst(ROLI) {
   u64 v = reg[rB(i)];
   u64 c = mod64(im(i));
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
-vminst(OP_ROLIR) {
+vminst(ROLIR) {
   u64 v = im(i);
   u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = rol64(v, c);
   vmbrk();
 }
 
-vminst(OP_ROR) {
+vminst(ROR) {
   u64 v = reg[rB(i)];
   u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
-vminst(OP_RORI) {
+vminst(RORI) {
   u64 v = reg[rB(i)];
   u64 c = mod64(im(i));
   reg[rA(i)] = ror64(v, c);
   vmbrk();
 }
 
-vminst(OP_RORIR) {
+vminst(RORIR) {
   u64 v = im(i);
   u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = ror64(v, c);
@@ -559,47 +595,47 @@ vminst(OP_RORIR) {
       setf(FZ); \
   } while (0)
 
-vminst(OP_BT) {
+vminst(BT) {
   bt_imm();
   vmbrk();
 }
 
-vminst(OP_BTG) {
+vminst(BTG) {
   bt_reg();
   vmbrk();
 }
 
-vminst(OP_BTS) {
+vminst(BTS) {
   bt_imm();
   reg[rA(i)] = bit_set(reg[rA(i)], bval_imm());
   vmbrk();
 }
 
-vminst(OP_BTSG) {
+vminst(BTSG) {
   bt_reg();
   reg[rA(i)] = bit_set(reg[rA(i)], bval_reg());
   vmbrk();
 }
 
-vminst(OP_BTR) {
+vminst(BTR) {
   bt_imm();
   reg[rA(i)] = bit_clr(reg[rA(i)], bval_imm());
   vmbrk();
 }
 
-vminst(OP_BTRG) {
+vminst(BTRG) {
   bt_reg();
   reg[rA(i)] = bit_clr(reg[rA(i)], bval_reg());
   vmbrk();
 }
 
-vminst(OP_BTC) {
+vminst(BTC) {
   bt_imm();
   reg[rA(i)] = bit_cml(reg[rA(i)], bval_imm());
   vmbrk();
 }
 
-vminst(OP_BTCG) {
+vminst(BTCG) {
   bt_reg();
   reg[rA(i)] = bit_cml(reg[rA(i)], bval_reg());
   vmbrk();
@@ -637,29 +673,29 @@ vminst(OP_BTCG) {
   } while (0)
 
 
-vminst(OP_CMP) {
+vminst(CMP) {
   do_cmp(reg[rA(i)], reg[rB(i)]);
   vmbrk();
 }
 
-vminst(OP_CMPI) {
+vminst(CMPI) {
   do_cmp(reg[rA(i)], im(i));
   vmbrk();
 }
 
-vminst(OP_CMPIR) {
+vminst(CMPIR) {
   do_cmp(im(i), reg[rA(i)]);
   vmbrk();
 }
 
-vminst(OP_CMPK) {
+vminst(CMPK) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_cmp(reg[rA(i)], k);
   vmbrk();
 }
 
-vminst(OP_CMPKR) {
+vminst(CMPKR) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_cmp(k, reg[rA(i)]);
@@ -678,17 +714,17 @@ vminst(OP_CMPKR) {
       setf(FQ);           \
   } while (0)
 
-vminst(OP_TEST) {
+vminst(TEST) {
   do_test(reg[rA(i)], reg[rB(i)]);
   vmbrk();
 }
 
-vminst(OP_TESTI) {
+vminst(TESTI) {
   do_test(reg[rA(i)], im(i));
   vmbrk();
 }
 
-vminst(OP_TESTK) {
+vminst(TESTK) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_test(reg[rA(i)], k);
@@ -700,156 +736,156 @@ vminst(OP_TESTK) {
 
 /* Set flags */
 
-vminst(OP_STC) {
+vminst(STC) {
   setf(FC);
   vmbrk();
 }
 
-vminst(OP_STO) {
+vminst(STO) {
   setf(FO);
   vmbrk();
 }
 
-vminst(OP_STS) {
+vminst(STS) {
   setf(FS);
   vmbrk();
 }
 
-vminst(OP_STZ) {
+vminst(STZ) {
   setf(FZ);
   vmbrk();
 }
 
-vminst(OP_STE) {
+vminst(STE) {
   setf(FE);
   vmbrk();
 }
 
-vminst(OP_STG) {
+vminst(STG) {
   setf(FG);
   vmbrk();
 }
 
-vminst(OP_STL) {
+vminst(STL) {
   setf(FL);
   vmbrk();
 }
 
-vminst(OP_STA) {
+vminst(STA) {
   setf(FA);
   vmbrk();
 }
 
-vminst(OP_STB) {
+vminst(STB) {
   setf(FB);
   vmbrk();
 }
 
-vminst(OP_STQ) {
+vminst(STQ) {
   setf(FQ);
   vmbrk();
 }
 
 /* Clear flags */
 
-vminst(OP_CLC) {
+vminst(CLC) {
   clrf(FC);
   vmbrk();
 }
 
-vminst(OP_CLO) {
+vminst(CLO) {
   clrf(FO);
   vmbrk();
 }
 
-vminst(OP_CLS) {
+vminst(CLS) {
   clrf(FS);
   vmbrk();
 }
 
-vminst(OP_CLZ) {
+vminst(CLZ) {
   clrf(FZ);
   vmbrk();
 }
 
-vminst(OP_CLE) {
+vminst(CLE) {
   clrf(FE);
   vmbrk();
 }
 
-vminst(OP_CLG) {
+vminst(CLG) {
   clrf(FG);
   vmbrk();
 }
 
-vminst(OP_CLL) {
+vminst(CLL) {
   clrf(FL);
   vmbrk();
 }
 
-vminst(OP_CLA) {
+vminst(CLA) {
   clrf(FA);
   vmbrk();
 }
 
-vminst(OP_CLB) {
+vminst(CLB) {
   clrf(FB);
   vmbrk();
 }
 
-vminst(OP_CLQ) {
+vminst(CLQ) {
   clrf(FQ);
   vmbrk();
 }
 
 /* Complement flags */
 
-vminst(OP_CMC) {
+vminst(CMC) {
   cmlf(FC);
   vmbrk();
 }
 
-vminst(OP_CMO) {
+vminst(CMO) {
   cmlf(FO);
   vmbrk();
 }
 
-vminst(OP_CMS) {
+vminst(CMS) {
   cmlf(FS);
   vmbrk();
 }
 
-vminst(OP_CMZ) {
+vminst(CMZ) {
   cmlf(FZ);
   vmbrk();
 }
 
-vminst(OP_CME) {
+vminst(CME) {
   cmlf(FE);
   vmbrk();
 }
 
-vminst(OP_CMG) {
+vminst(CMG) {
   cmlf(FG);
   vmbrk();
 }
 
-vminst(OP_CML) {
+vminst(CML) {
   cmlf(FL);
   vmbrk();
 }
 
-vminst(OP_CMA) {
+vminst(CMA) {
   cmlf(FA);
   vmbrk();
 }
 
-vminst(OP_CMB) {
+vminst(CMB) {
   cmlf(FB);
   vmbrk();
 }
 
-vminst(OP_CMQ) {
+vminst(CMQ) {
   cmlf(FQ);
   vmbrk();
 }
@@ -859,143 +895,143 @@ vminst(OP_CMQ) {
 #define br_abs()  (reg[RPC]  = im(i))
 #define br_rel()  (reg[RPC] += im(i))
 
-vminst(OP_JMP) {
+vminst(JMP) {
   br_abs();
   vmbrk();
 }
 
-vminst(OP_JMPN) {
+vminst(JMPN) {
   br_rel();
   vmbrk();
 }
 
-vminst(OP_JE) {
+vminst(JE) {
   if (getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNE) {
+vminst(JNE) {
   if (!getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JG) {
+vminst(JG) {
   if (getf(FG))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JGE) {
+vminst(JGE) {
   if (getf(FG) || getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JL) {
+vminst(JL) {
   if (getf(FL))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JLE) {
+vminst(JLE) {
   if (getf(FL) || getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JA) {
+vminst(JA) {
   if (getf(FA))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JAE) {
+vminst(JAE) {
   if (getf(FA) || getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JB) {
+vminst(JB) {
   if (getf(FB))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JBE) {
+vminst(JBE) {
   if (getf(FB) || getf(FQ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JC) {
+vminst(JC) {
   if (getf(FC))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNC) {
+vminst(JNC) {
   if (!getf(FC))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JO) {
+vminst(JO) {
   if (getf(FO))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNO) {
+vminst(JNO) {
   if (!getf(FO))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JS) {
+vminst(JS) {
   if (getf(FS))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNS) {
+vminst(JNS) {
   if (!getf(FS))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JZ) {
+vminst(JZ) {
   if (getf(FZ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNZ) {
+vminst(JNZ) {
   if (!getf(FZ))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JX) {
+vminst(JX) {
   if (getf(FE))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_JNX) {
+vminst(JNX) {
   if (!getf(FE))
     br_rel();
   vmbrk();
 }
 
-vminst(OP_LOOP) {
+vminst(LOOP) {
   if (--reg[rA(i)] != 0)
     reg[RPC] += im(i);
   vmbrk();
 }
 
-vminst(OP_CALL) {
+vminst(CALL) {
   statcd s;
   s = vpush(reg[RLR]);
   if (s != S_OK)
@@ -1009,7 +1045,7 @@ vminst(OP_CALL) {
   vmbrk();
 }
 
-vminst(OP_CALLR) {
+vminst(CALLR) {
   statcd s;
   s = vpush(reg[RLR]);
   if (s != S_OK)
@@ -1023,7 +1059,7 @@ vminst(OP_CALLR) {
   vmbrk();
 }
 
-vminst(OP_RET) {
+vminst(RET) {
   subroutine_ret:
   reg[RSP] = reg[RBP];
   reg[RPC] = reg[RLR];
@@ -1037,7 +1073,7 @@ vminst(OP_RET) {
   vmbrk();
 }
 
-vminst(OP_THR) {
+vminst(THR) {
   setf(FE);
   goto subroutine_ret;
 }
@@ -1047,5 +1083,6 @@ vminst(OP_THR) {
 
 #undef vminst
 #undef vmbrk
-default: return S_ILL; }
+    default: return S_ILL;
+  }
 }

@@ -16,11 +16,6 @@ int main(int argc, char **argv) {
   main_argc = argc;
   main_argv = argv;
 
-  if (argc == 1) {
-    rlog("Type '%s -?' for more info.\n", argv[0]);
-    return 1;
-  }
-
   int i;
   bool opt_help = false;
   bool opt_version = false;
@@ -113,7 +108,8 @@ int main(int argc, char **argv) {
   }
 
   if (argc - i == 0) {
-    rlog("Please provide a bytecode file.\n");
+    rlog("No input bytecode file.\n");
+    rlog("Type '%s -?' for more info.\n", argv[0]);
     return 1;
   }
 

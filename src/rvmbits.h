@@ -265,6 +265,7 @@ OP_CALL,           /* [    M]   call a subroutine */
 OP_CALLR,          /* [A    ]   setup a new frame and set reg A to %pc */
 OP_RET,            /* [     ]   return to the caller */
 OP_THR,            /* [     ]   set FE, then return to the caller */
+opcnt,    /* internal: The number of opcodes. */
 } opcode;
 
 /* VM calls (vmcalls use R0-R9 as their argument) */
