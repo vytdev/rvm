@@ -24,7 +24,6 @@ extern char vmstate;
 #define V_INAC 0 /* Inactive */
 #define V_PROV 1 /* Provisioning */
 #define V_RUNN 2 /* Running */
-#define V_SUSP 3 /* Suspended */
 
 /* Execution modes */
 extern char exec_mode;
@@ -43,6 +42,7 @@ typedef int statcd;
 #define S_STOVF   5 /* Stack overflow */
 #define S_STUND   6 /* Stack underflow */
 #define S_OOB     7 /* Out of bounds access */
+#define S_TERM    8 /* Terminated */
 #define vmfmsg(s) \
   (rlog("vm fault [%d]: %s\n", (s), statcd_msg((s))))
 

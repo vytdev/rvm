@@ -64,6 +64,7 @@ const char *statcd_msg(statcd n) {
     case S_STOVF:   return "Stack overflow";
     case S_STUND:   return "Stack underflow";
     case S_OOB:     return "Out of bounds access";
+    case S_TERM:    return "Terminated";
     default:        return "Unknown status";
   }
 }

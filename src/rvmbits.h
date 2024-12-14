@@ -110,7 +110,7 @@ typedef struct rvmhdr {
 typedef enum {
 OP_NOP = 0,        /* no-op */
 OP_IVC,            /* [    M]   invoke vm call */
-OP_HLT,            /* [     ]   halt the vm's execution and enter idle */
+OP_HLT,            /* [     ]   terminates the vm */
 /* Data manipulation */
 OP_MOV,            /* [AB   ]   copy reg B to reg A */
 OP_MOVI,           /* [A   M]   copy M to reg A */

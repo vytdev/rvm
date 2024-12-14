@@ -2,9 +2,7 @@
 #include "codec.h"
 #include "rvmbits.h"
 #include "util.h"
-// #include "thread.h" /* For thread_yield(). */
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 /* Prototype for the vm__interpreter() function. */
@@ -42,14 +40,6 @@ void vmexec(void) {
 static statcd vm__interpreter(void) {
   interp_start:
 
-  if (vmstate == V_SUSP) {
-    // TODO: Uncomment this once multi-threading is
-    // supported.
-    //
-    //thread_yield();
-    goto interp_start; /* This is inefficient. */
-  }
-
   /* Make sure we're still reading within the bytecode. */
   if (len < 8 || reg[RPC] > len - 8)
     return S_ILL;
@@ -80,16 +70,7 @@ vminst(IVC) {
 }
 
 vminst(HLT) {
-  vmstate = V_SUSP;
-  rlog("Execution suspended.\n");
-  fprintf(stderr,
-     "The VM is currently in an idle state.\n"
-     "Press ENTER to reset and resume execution.\n"
-     "%%pc is 0x%"V64S"x\n",
-     reg[RPC]);
-  getchar(); /* Wait for ENTER. */
-  vmstate = V_RUNN;
-  vmbrk();
+  return S_TERM;
 }
 
 /* Data manipulation. */

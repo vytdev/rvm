@@ -12,7 +12,7 @@
 04 00 00 28 00 00 00 00    # mov %r0, #24
 93 00 00 40 00 00 00 00    # call fib
 03 00 0a 00 00 00 00 00    # mov %r0, %rv
-7c 00 00 ff ff ff ff ff    # jmp <somewhere_else>
+02 00 00 00 00 00 00 00    # hlt
 
 # fib:
 
