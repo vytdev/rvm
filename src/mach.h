@@ -14,6 +14,7 @@ extern uint64_t datalen;
 extern uint32_t default_stlen;
 
 /* Per-thread context */
+extern TLOCAL uint32_t tid;
 extern TLOCAL uint64_t reg[16];
 extern TLOCAL uint64_t *stack;
 extern TLOCAL uint32_t stack_len;
@@ -42,6 +43,8 @@ typedef int statcd;
 #define S_STOVF   5 /* Stack overflow */
 #define S_STUND   6 /* Stack underflow */
 #define S_OOB     7 /* Out of bounds access */
+#define vmfmsg(s) \
+  (rlog("vm fault [%d]: %s\n", (s), statcd_msg((s))))
 
 /* Flag manipulation */
 #define setf(f) (reg[RFL] |= (f))
@@ -110,13 +113,15 @@ void dump_benchmark(void);
 
 #else
 
-#define benchmark_epoch
-#define benchmark_break
-#define benchmark_insts
-#define benchmark_incr()
-#define benchmark_init()
-#define benchmark_curr()
-#define benchmark_tag()
+#define benchmark_epoch 0
+#define benchmark_break 0
+#define benchmark_insts 0
+
+#define benchmark_incr() 0
+#define benchmark_init() 0
+#define benchmark_curr() 0
+#define benchmark_tag() 0
+
 #define read_mclock() (U64C(0))
 #define dump_benchmark()
 

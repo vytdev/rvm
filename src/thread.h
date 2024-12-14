@@ -25,6 +25,9 @@ typedef pthread_cond_t cond_t;
 
 #define TLOCAL __thread
 
+#define THREAD_FUNC(name) void * name (void *arg)
+#define EXIT_THREAD(rval) return (void*)(rval)
+
 #endif // defined(__linux__)
 
 #endif // RVM_THREAD_H_

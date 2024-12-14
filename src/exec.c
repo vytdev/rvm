@@ -25,11 +25,12 @@ void vmexec(void) {
   statcd s = vm__interpreter();
   benchmark_tag();
 
-  /* Interpreter complete. Additional state checks. */
+  /* Interpreter complete. Do some additional state checks. */
   if (s != S_OK)
     show_err(s);
 
-  dump_benchmark();
+  if (tid == 0) /* Only dump benchmarks from the main thread. */
+    dump_benchmark();
 
   if (s != S_OK) {
     rlog("Error is unrecoverable. Aborting...\n");

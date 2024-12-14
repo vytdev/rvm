@@ -10,16 +10,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Process context. */
 char     *src             = NULL;
 uint64_t len              = 0;
 uint64_t *data            = NULL;
 uint64_t datalen          = 0;
 uint32_t default_stlen    = 524288; /* 524288 * 8 = 4MB */
+
+char     vmstate          = V_INAC;
+char     exec_mode        = X_USER;
+
+/* Thread context. */
+uint32_t TLOCAL tid       = 0;
 uint64_t TLOCAL reg[16];
 uint64_t TLOCAL *stack    = NULL;
 uint32_t TLOCAL stack_len = 0;
-char     vmstate          = V_INAC;
-char     exec_mode        = X_USER;
 
 
 bool checkmagic(char *src, uint64_t len) {
@@ -170,8 +175,7 @@ statcd vpop(uint64_t *o) {
 
 
 void show_err(statcd s) {
-  rlog("vm fault [%d]: %s\n",
-       s, statcd_msg(s));
+  vmfmsg(s);
   /* Some useful stats. */
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
   fprintf(stderr, "  stack used:  %"V64S"u B\n", reg[RSP] * 8);
@@ -229,6 +233,41 @@ void run_vm(int argc, char **argv) {
   vth_free();
   free(bin);
   ret_succ();
+  #undef ret_fail
+  #undef ret_succ
+}
+
+
+/* For future use. */
+typedef struct vm__threadOpts {
+  uint32_t tid;
+  uint32_t stlen;
+  uint64_t start_pc;
+} vm__threadOpts;
+
+static THREAD_FUNC(vm__threadHandler) {
+  #define fail() exit(-1)
+  /* Get the thread options structure. */
+  if (!arg) {
+    vmfmsg(S_ERR);
+    rlog("Thread initialization failed.\n");
+    fail();
+  }
+  vm__threadOpts opts = *(vm__threadOpts*)arg;
+  free(arg);
+  arg = NULL;
+  /* Initialise the thread stack and registers. */
+  if (opts.tid == 0 || !vth_init(opts.stlen, opts.start_pc)) {
+    vmfmsg(S_ERR);
+    rlog("Failed to initialize thread context.\n");
+    fail();
+  }
+  tid = opts.tid;
+  /* Run the interpreter. */
+  vmexec();
+  vth_free();
+  EXIT_THREAD(0);
+  #undef fail
 }
 
 
