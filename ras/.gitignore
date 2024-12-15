@@ -1,0 +1,4 @@
+# Ignore built files.
+*.o
+*.d
+ras
