@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 int    main_argc;
 char **main_argv;
@@ -69,6 +70,23 @@ char *util_readbin(char *path, uvar *size_out) {
   fclose(fp);
   *size_out = size;
   return buff;
+}
+
+
+bool util_writebin(char *path, char *buff, uvar size) {
+  if (!path || !buff || size == 0)
+    return false;
+  /* Open the file for writing. */
+  FILE *fp = fopen(path, "wb");
+  if (!fp)
+    return NULL;
+  /* Write the buffer. */
+  if (util_bfwrite(buff, size, fp) != size) {
+    fclose(fp);
+    return false;
+  }
+  fclose(fp);
+  return true;
 }
 
 

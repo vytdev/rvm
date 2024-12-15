@@ -2,6 +2,7 @@
 #define RVM_UTIL_H_
 #include "config.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 /* Arguments passed to this vm. */
 extern int    main_argc;
@@ -18,6 +19,9 @@ uvar util_bfwrite(char *buf, uvar size, FILE *fp);
 
 /* Reads a binary file. */
 char *util_readbin(char *path, uvar *size_out);
+
+/* Writes to a binary file. */
+bool util_writebin(char *path, char *buff, uvar size);
 
 /* Print a log with the executable name. */
 void rlog(const char *fmt, ...);

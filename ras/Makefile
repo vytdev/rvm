@@ -2,33 +2,33 @@
 #
 
 CC=      gcc
-CFLAGS=  -std=gnu99 -MMD -MP
+CFLAGS=  -std=gnu99
 LDFLAGS=
 
-SRC= main.c
-OBJ= $(SRC:.c=.c.o)
-DEP= $(SRC:.c=.c.d)
+CFLAGS+=  $(MYCFLAGS)
+LDFLAGS+= $(MYLDFLAGS)
+
+OBJ= main.o util.o rvm_util.o
 TRG= ras
 
 all: release
 build: $(TRG)
 
--include $(DEP)
+-include .depend
 
 $(TRG): $(OBJ)
-	@ echo "linking $@..."
-	@ $(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
 
-%.c.o: %.c
-	@ echo "$<  ==>  $@"
-	@ $(CC) $(CFLAGS) -c -o $@ $<
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-.PHONY: clean debug release
+.PHONY: depend clean debug release
+
+depend:
+	$(CC) -MM *.c > .depend
 
 clean:
-	rm -f $(TRG)
-	rm -f $(OBJ)
-	rm -f $(DEP)
+	rm -f $(TRG) $(OBJ)
 
 debug: CFLAGS+=  -g -DDEBUG_
 debug: LDFLAGS+= -g
@@ -36,3 +36,9 @@ debug: build
 
 release: CFLAGS+= -O2 -march=native -mtune=native
 release: build
+
+# Other dependencies goes here.
+
+COMP= $(CC) $(CFLAGS) -c -o $@ $<
+
+rvm_util.o: ../rvm/util.c ; $(COMP)

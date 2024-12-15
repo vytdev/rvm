@@ -1,4 +1,3 @@
-# Ignore built files.
+# Built files.
 *.o
-*.d
 ras
