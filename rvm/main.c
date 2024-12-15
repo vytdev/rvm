@@ -141,7 +141,7 @@ void show_help(void) {
     "\n", main_argv[0]);
 
   #ifdef PERF_
-  fprintf(stderr, "Fast mode is enabled.\n");
+  fprintf(stderr, "warning: Fast mode is enabled. Unsafe!\n");
   #endif
 
   fprintf(stderr, "Base ABI version: v%u\n", RVM_VER);
@@ -151,6 +151,7 @@ void show_help(void) {
 
 void show_version(void) {
   printf("Redstone Abstract Virtual Machine (rvm)\n");
+  printf("Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
   printf("Built on %s at %s\n", __DATE__, __TIME__);
   printf("Base ABI version: v%u\n", RVM_VER);
   printf("Opcode count: %u ops\n", opcnt);

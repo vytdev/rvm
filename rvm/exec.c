@@ -9,10 +9,14 @@
 static statcd vm__interpreter(void);
 
 /* Macro to check if a const rel index is valid. */
-#define check_k(n) do { \
-    if (len < 8 || reg[RPC] + (n) > len - 8)  \
-      return S_OOB;     \
-  } while (0)
+#ifdef PERF_
+#  define check_k(n)
+#else
+#  define check_k(n) do { \
+      if (len < 8 || reg[RPC] + (n) > len - 8)  \
+        return S_OOB;     \
+    } while (0)
+#endif
 /* Macro to read a const. Must be preceded by check_k(). */
 #define gconst(n) (read64(src + reg[RPC] + (n)))
 
@@ -41,8 +45,10 @@ static statcd vm__interpreter(void) {
   interp_start:
 
   /* Make sure we're still reading within the bytecode. */
+  #ifndef PERF_
   if (len < 8 || reg[RPC] > len - 8)
     return S_ILL;
+  #endif
 
   /* For benchmarking. */
   benchmark_incr();
@@ -93,64 +99,80 @@ vminst(MOVK) {
 
 vminst(LOD) {
   u64 idx = im(i);
+  #ifndef PERF_
   if (idx >= datalen)
     return S_OOB;
+  #endif
   reg[rA(i)] = data[idx];
   vmbrk();
 }
 
 vminst(LODS) {
   u64 idx = im(i);
+  #ifndef PERF_
   if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
     return S_OOB;
+  #endif
   reg[rA(i)] = stack[reg[RBP] + idx];
   vmbrk();
 }
 
 vminst(LODA) {
   u64 idx = reg[RBP] - 3 - im(i);
+  #ifndef PERF_
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
+  #endif
   reg[rA(i)] = stack[idx];
   vmbrk();
 }
 
 vminst(LODAR) {
   u64 idx = reg[RBP] - 3 - reg[rB(i)];
+  #ifndef PERF_
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
+  #endif
   reg[rA(i)] = stack[idx];
   vmbrk();
 }
 
 vminst(STR) {
   u64 idx = im(i);
+  #ifndef PERF_
   if (idx >= datalen)
     return S_OOB;
+  #endif
   data[idx] = reg[rA(i)];
   vmbrk();
 }
 
 vminst(STRS) {
   u64 idx = im(i);
+  #ifndef PERF_
   if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
     return S_OOB;
+  #endif
   stack[reg[RBP] + idx] = reg[rA(i)];
   vmbrk();
 }
 
 vminst(STRA) {
   u64 idx = reg[RBP] - 3 - im(i);
+  #ifndef PERF_
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
+  #endif
   stack[idx] = reg[rA(i)];
   vmbrk();
 }
 
 vminst(STRAR) {
   u64 idx = reg[RBP] - 3 - reg[rB(i)];
+  #ifndef PERF_
   if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
     return S_OOB;
+  #endif
   stack[idx] = reg[rA(i)];
   vmbrk();
 }
@@ -163,33 +185,49 @@ vminst(SWP) {
 }
 
 vminst(PUSH) {
+  #ifndef PERF_
   statcd s = vpush(reg[rA(i)]);
   if (s != S_OK)
     return s;
+  #else
+  vpush(reg[rA(i)]);
+  #endif
   vmbrk();
 }
 
 vminst(PUSHI) {
+  #ifndef PERF_
   statcd s = vpush(im(i));
   if (s != S_OK)
     return s;
+  #else
+  vpush(im(i));
+  #endif
   vmbrk();
 }
 
 vminst(PUSHK) {
+  #ifndef PERF_
   check_k(im(i));
   statcd s = vpush(gconst(im(i)));
   if (s != S_OK)
     return s;
+  #else
+  vpush(gconst(im(i)));
+  #endif
   vmbrk();
 }
 
 vminst(POP) {
+  #ifndef PERF_
   if (reg[RSP] <= reg[RBP])
     return S_STUND;
   statcd s = vpop(&reg[rA(i)]);
   if (s != S_OK)
     return s;
+  #else
+  vpop(&reg[rA(i)]);
+  #endif
   vmbrk();
 }
 
@@ -1014,6 +1052,7 @@ vminst(LOOP) {
 }
 
 vminst(CALL) {
+  #ifndef PERF_
   statcd s;
   s = vpush(reg[RLR]);
   if (s != S_OK)
@@ -1021,6 +1060,10 @@ vminst(CALL) {
   s = vpush(reg[RBP]);
   if (s != S_OK)
     return s;
+  #else
+  vpush(reg[RLR]);
+  vpush(reg[RBP]);
+  #endif
   reg[RLR] = reg[RPC];
   reg[RBP] = reg[RSP];
   reg[RPC] = im(i);
@@ -1028,6 +1071,7 @@ vminst(CALL) {
 }
 
 vminst(CALLR) {
+  #ifndef PERF_
   statcd s;
   s = vpush(reg[RLR]);
   if (s != S_OK)
@@ -1035,6 +1079,10 @@ vminst(CALLR) {
   s = vpush(reg[RBP]);
   if (s != S_OK)
     return s;
+  #else
+  vpush(reg[RLR]);
+  vpush(reg[RBP]);
+  #endif
   reg[RLR] = reg[RPC];
   reg[RBP] = reg[RSP];
   reg[RPC] = reg[rA(i)];
@@ -1045,6 +1093,7 @@ vminst(RET) {
   subroutine_ret:
   reg[RSP] = reg[RBP];
   reg[RPC] = reg[RLR];
+  #ifndef PERF_
   statcd s;
   s = vpop(&reg[RBP]);
   if (s != S_OK)
@@ -1052,6 +1101,10 @@ vminst(RET) {
   s = vpop(&reg[RLR]);
   if (s != S_OK)
     return s;
+  #else
+  vpop(&reg[RBP]);
+  vpop(&reg[RLR]);
+  #endif
   vmbrk();
 }
 

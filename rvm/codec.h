@@ -2,7 +2,7 @@
 #define RVM_CODEC_H_
 #include "config.h"
 
-#if !defined(PERF_) || !defined(BO_LE)
+#if defined(BO_BE)
 
 /* read 8 (1 byte) */
 #define read8(s)  ((u8)((s)[0]))
@@ -53,7 +53,7 @@
     (s)[7] = ((u64)(v) >> 56) & 0xff; \
   } while (0)
 
-#else /* if defined(PERF_) && defined(BO_LE) */
+#else /* if defined(BO_LE) */
 
 #define read8(s)  ((s)[0])
 #define read16(s) (*(u16*)(void*)&(s)[0])

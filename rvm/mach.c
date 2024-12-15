@@ -156,20 +156,24 @@ bool vth_free(void) {
 
 
 statcd vpush(uint64_t v) {
+  #ifndef PERF_
   if (!stack || stack_len == 0)
     return S_ERR;
   if (reg[RSP] >= stack_len)
     return S_STOVF;
+  #endif
   stack[reg[RSP]++] = v;
   return S_OK;
 }
 
 
 statcd vpop(uint64_t *o) {
+  #ifndef PERF_
   if (!stack || stack_len == 0 || !o)
     return S_ERR;
   if (reg[RSP] == 0)
     return S_STUND;
+  #endif
   *o = stack[--reg[RSP]];
   return S_OK;
 }
