@@ -2,45 +2,46 @@
 #
 
 CC=      gcc
-CFLAGS=  -std=gnu99 -MMD -MP
+CFLAGS=  -std=gnu99
 LDFLAGS= -lm
+
+CFLAGS+=  $(MYCFLAGS)
+LDFLAGS+= $(MYLDFLAGS)
 
 ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-SRC= main.c util.c mach.c exec.c vmcall.c
-OBJ= $(SRC:.c=.c.o)
-DEP= $(SRC:.c=.c.d)
+OBJ= main.o util.o mach.o exec.o vmcall.o
 TRG= rvm
 
 all: release
 build: $(TRG)
 
--include $(DEP)
+-include .depend
 
 $(TRG): $(OBJ)
-	@ echo "linking $@..."
-	@ $(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
 
-%.c.o: %.c
-	@ echo "$<  ==>  $@"
-	@ $(CC) $(CFLAGS) -c -o $@ $<
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-.PHONY: clean debug release perf
+.PHONY: depend clean debug release perf
+
+depend:
+	$(CC) -MM *.c > .depend
 
 clean:
-	rm -f $(TRG)
-	rm -f $(OBJ)
-	rm -f $(DEP)
+	rm -f $(TRG) $(OBJ)
 
 debug: CFLAGS+=  -g -DDEBUG_
 debug: LDFLAGS+= -g
 debug: build
 
-release: CFLAGS+= -O3 -march=native -mtune=native -fomit-frame-pointer
+release: CFLAGS+=  -flto -O3 -march=native -mtune=native \
+	-fomit-frame-pointer -funroll-loops -ftree-vectorize
+release: LDFLAGS+= -flto -O3
 release: build
 
-perf: CFLAGS+=  -DPERF_ -flto -funroll-loops -ftree-vectorize
-perf: LDFLAGS+= -flto -O3
+perf: CFLAGS+= -DPERF_
 perf: release
