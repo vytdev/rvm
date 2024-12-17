@@ -8,6 +8,8 @@ typedef struct rvmhdr {
   uint16_t abi_ver;
   uint8_t  type;
   uint64_t entry;
+  uint64_t codoff;
+  uint64_t codlen;
   uint64_t datoff;
   uint64_t datlen;
 } rvmhdr;

@@ -3,11 +3,12 @@
 7f 52 56 4d                # magic
 01 00                      # abi_ver
 00                         # type (RTYP_EXEC)
-20 00 00 00 00 00 00 00    # entry
+00   # (padding)
+00 00 00 00 00 00 00 00    # entry
+30 00 00 00 00 00 00 00    # codoff
+02 00 00 00 00 00 00 00    # codlen
 00 00 00 00 00 00 00 00    # datoff
 00 00 00 00 00 00 00 00    # datlen
 
-00                         # (padding)
-
 10 00 00 00 00 00 00 00    # _loop: push #0
-7c 00 00 20 00 00 00 00    # jmp _loop
+7d 00 00 fe ff ff ff ff    # jmp _loop

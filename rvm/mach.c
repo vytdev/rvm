@@ -13,8 +13,11 @@
 /* Process context. */
 char     *src             = NULL;
 uint64_t len              = 0;
+uint64_t *code            = NULL;
+uint64_t codelen          = 0;
 uint64_t *data            = NULL;
 uint64_t datalen          = 0;
+/* Options. */
 uint32_t default_stlen    = 524288; /* 524288 * 8 = 4MB */
 
 char     vmstate          = V_INAC;
@@ -39,7 +42,7 @@ bool checkmagic(char *src, uint64_t len) {
 
 
 bool parse_rvmhdr(char *src, uint64_t len, rvmhdr *out) {
-  if (!src || len < 31 || !out || !checkmagic(src, len))
+  if (!src || len < 48 || !out || !checkmagic(src, len))
     return false;
   out->magic[0] = 0x7f;
   out->magic[1] = 0x52;
@@ -47,9 +50,12 @@ bool parse_rvmhdr(char *src, uint64_t len, rvmhdr *out) {
   out->magic[3] = 0x4d;
   out->abi_ver  = read16(src+4);
   out->type     = read8(src+6);
-  out->entry    = read64(src+7);
-  out->datoff   = read64(src+15);
-  out->datlen   = read64(src+23);
+                  /* (1B pad)*/
+  out->entry    = read64(src+8);
+  out->codoff   = read64(src+16);
+  out->codlen   = read64(src+24);
+  out->datoff   = read64(src+32);
+  out->datlen   = read64(src+40);
   return true;
 }
 
@@ -111,14 +117,25 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   *main_pc = hdr.entry;
   src = prog;
   len = sz;
+  /* Load the program code. */
+  if (hdr.codlen * 8 > len || hdr.codoff > len || hdr.codlen * 8 + hdr.codoff > len)
+    return false;
+  code = (uint64_t*)malloc(hdr.codlen * sizeof(uint64_t));
+  if (!code)
+    return false;
+  codelen = hdr.codlen;
+  for (uint64_t i = 0; i < codelen; i++)
+    code[i] = read64(prog + hdr.codoff + i * 8);
   /* Load the program data. */
   if (hdr.datlen != 0) {
+    if (hdr.datlen * 8 > len || hdr.codoff > len || hdr.datlen * 8 + hdr.datoff > len)
+      return false;
     data = (uint64_t*)malloc(hdr.datlen * sizeof(uint64_t));
     if (!data)
       return false;
     datalen = hdr.datlen;
     for (uint64_t i = 0; i < datalen; i++)
-      data[i] = read64(prog + i * 8);
+      data[i] = read64(prog + hdr.datoff + i * 8);
   }
   return true;
 }

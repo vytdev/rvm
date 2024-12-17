@@ -9,8 +9,11 @@
 /* The context of the entire program */
 extern char     *src;
 extern uint64_t len;
+extern uint64_t *code;
+extern uint64_t codelen;
 extern uint64_t *data;
 extern uint64_t datalen;
+/* Program options */
 extern uint32_t default_stlen;
 
 /* Per-thread context */

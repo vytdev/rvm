@@ -1,5 +1,4 @@
 #include "mach.h"
-#include "codec.h"
 #include "rvmbits.h"
 #include "util.h"
 #include <stdint.h>
@@ -8,17 +7,19 @@
 /* Prototype for the vm__interpreter() function. */
 static statcd vm__interpreter(void);
 
+/* Macro to fetch the next instruction. */
+#define fetch() (code[reg[RPC]++])
 /* Macro to check if a const rel index is valid. */
 #ifdef PERF_
 #  define check_k(n)
 #else
 #  define check_k(n) do { \
-      if (len < 8 || reg[RPC] + (n) > len - 8)  \
+      if (reg[RPC] + (n) >= codelen) \
         return S_OOB;     \
     } while (0)
 #endif
 /* Macro to read a const. Must be preceded by check_k(). */
-#define gconst(n) (read64(src + reg[RPC] + (n)))
+#define gconst(n) (code[reg[RPC] + (n)])
 
 
 void vmexec(void) {
@@ -46,7 +47,7 @@ static statcd vm__interpreter(void) {
 
   /* Make sure we're still reading within the bytecode. */
   #ifndef PERF_
-  if (len < 8 || reg[RPC] > len - 8)
+  if (reg[RPC] >= codelen)
     return S_ILL;
   #endif
 
@@ -54,8 +55,7 @@ static statcd vm__interpreter(void) {
   benchmark_incr();
 
   /* Fetch the next instruction. */
-  uint64_t i = read64(src + reg[RPC]);
-  reg[RPC] += 8;
+  uint64_t i = fetch();
 
 /* Macros for opcode implementation. */
 switch ((opcode)op(i)) {
@@ -1115,9 +1115,5 @@ vminst(THR) {
 
 #undef br_abs
 #undef br_rel
-
-#undef vminst
-#undef vmbrk
-    default: return S_ILL;
-  }
+default: return S_ILL; }
 }
