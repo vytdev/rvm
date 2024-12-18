@@ -1,0 +1,10 @@
+; Loop 1 billion times.
+; Use the 'loop' instruction.
+
+mov %r0, #1000000000
+_loop:
+loop %r0, _loop
+
+; exit routine
+mov %r0, #127
+ivc #0 ; VM_EXIT

@@ -8,7 +8,7 @@ LDFLAGS=
 CFLAGS+=  $(MYCFLAGS)
 LDFLAGS+= $(MYLDFLAGS)
 
-OBJ= main.o util.o rvm_util.o
+OBJ= main.o lexer.o util.o rvm_util.o
 TRG= ras
 
 all: release
