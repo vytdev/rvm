@@ -139,6 +139,10 @@ i64 p64s(char *str, int base, char **endptr) {
   /* Parse the string. */
   while (*str != '\0') {
     char c = *str;
+    if (c == '_') {
+      str++;
+      continue;
+    }
     char val = 0;
     if (c >= '0' && c <= '9')
       val = c - '0';

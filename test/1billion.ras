@@ -1,7 +1,7 @@
 ; Loop 1 billion times.
 ; Use the 'loop' instruction.
 
-mov %r0, #1000000000
+mov %r0, #1_000_000_000
 _loop:
 loop %r0, _loop
 

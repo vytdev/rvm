@@ -162,10 +162,9 @@ Token *parser_tokenize(Parser *ptx) {
   }
 
   /* Const token. */
-  else if (ch == '#' || isz_dig(ch)) {
+  else if (ch == '#') {
     tok_start(TOK_CONST);
-    if (ch == '#')
-      parser__increment(ptx);
+    parser__increment(ptx);
     pos_t len = 1;
     /* Detect the base. */
     int base = 10;
@@ -187,14 +186,16 @@ Token *parser_tokenize(Parser *ptx) {
     }
     /* Determine the length of the const. */
     while (1) {
-      if (base == 2  && (ch < '0' || ch > '1'))
-        break;
-      if (base == 8  && (ch < '0' || ch > '7'))
-        break;
-      if (base == 10 && (ch < '0' || ch > '9'))
-        break;
-      if (base == 16 && !isz_hex(ch))
-        break;
+      if (ch != '_') {
+        if (base == 2  && (ch < '0' || ch > '1'))
+          break;
+        if (base == 8  && (ch < '0' || ch > '7'))
+          break;
+        if (base == 10 && (ch < '0' || ch > '9'))
+          break;
+        if (base == 16 && !isz_hex(ch))
+          break;
+      }
       parser__increment(ptx);
       len++;
     }
