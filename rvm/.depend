@@ -1,4 +1,4 @@
-exec.o: exec.c mach.h rvmbits.h config.h thread.h codec.h util.h
+exec.o: exec.c mach.h rvmbits.h config.h thread.h util.h
 mach.o: mach.c mach.h rvmbits.h config.h thread.h codec.h util.h
 main.o: main.c mach.h rvmbits.h config.h thread.h util.h
 util.o: util.c util.h config.h
