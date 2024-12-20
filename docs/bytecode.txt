@@ -1,0 +1,68 @@
+
+  rvm bytecode format
+  Last updated: 20 Dec 2024 at 01:57 am GMT
+
+
+I. RVM header format
+
+  7f 52 56 4d                ident
+  ?? ??                      abi_ver
+  ??                         type (loadable, rawobj)
+  ??                         flags (dependent, exports)
+  ?? ?? ?? ?? ?? ?? ?? ??    entryp
+  ?? ?? ?? ?? ?? ?? ?? ??    shoff
+  ?? ?? ?? ?? ?? ?? ?? ??    shnum
+  ?? ?? ?? ?? ?? ?? ?? ??    stroff
+  <24 bytes padding>
+
+
+II. Section header
+
+  Format:
+  =======
+  name          4 B
+  <padding>     4 B
+  offset        8 B
+  size          8 B
+  entcnt        8 B     * if the section is an array
+
+
+  Default sections:
+  =================
+  .code      8 B per element
+  .data      8 B per element
+  .symb     16 B per element
+  .reloc    24 B per element
+  .depls     4 B per element
+
+  By convention, custom sections must not start with
+  a dot (.)
+
+
+III. Table-section formats
+
+  .symb table entries:
+  ====================
+  name          4 B
+  type          1 B   (notype, code, data)
+  binding       1 B   (global, internal, local)
+  <padding>     2 B
+  value         8 B
+
+  .reloc table entries:
+  =====================
+  offset        8 B
+  addend        8 B
+  name          4 B
+  nsrc          1 B   (code, data)
+  stype         1 B   (abs64, imm40, imm40pc)
+  <padding>     2 B
+
+
+IV. TO-DOs
+
+  Add these other sections:
+
+  -) .rdata   For read-only data.
+  -) .tls     For tls-defaults.
+  -) .obj     For heap and GC matters.
