@@ -34,76 +34,25 @@ void write_rvm_reloc(char *buf, rvm_reloc rel);
 bool check_magic(char *buf);
 
 
+/* Opaque handle for bytecode deserialisation. */
+typedef struct ByteCode ByteCode;
 
-/* RVM stream descriptor. */
-typedef struct Rvm    Rvm;
-typedef struct RvmSec RvmSec;
+/* Opens a bytecode descriptor. */
+ByteCode *bc_open(void *buf, uvar len);
 
-/* Create a new RVM descriptor. */
-Rvm *rvm_open(void);
+/* Closes a bytecode descriptor. */
+void bc_close(ByteCode *bd);
 
-/* Close an RVM descriptor. */
-void rvm_close(Rvm *rd);
+/* Returns the cached image header. */
+rvmhdr bc_gethdr(ByteCode *bd);
 
-/* Adds a new string into the string table. Returns MAX_U32 when fails. */
-uint32_t rvm_addstr(Rvm *rd, char *str);
+/* Returns a ptr to the strtab entry of strndx. Can be NULL. */
+char *bc_getstr(ByteCode *bd, uint32_t strndx);
 
-/* Like rvm_addstr(), but avoids duplicates. */
-uint32_t rvm_addstr_nodup(Rvm *rd, char *str);
+/* Returns a ptr to the shdr of the given section. Can be NULL. */
+void *bc_getsect(ByteCode *bd, char *name);
 
-/* Get the bytecode header. */
-rvmhdr rvm_gethdr(Rvm *rd);
-
-/* Set the ABI version for the bytecode. */
-void rvm_setabi(Rvm *rd, uint16_t abi_ver);
-
-/* Set the type of the bytecode. */
-void rvm_settype(Rvm *rd, uint8_t type);
-
-/* Set the type flags of the flags. */
-void rvm_setflags(Rvm *rd, uint8_t flags);
-
-/* Load an in-memory bytecode image stream. */
-bool rvm_load(Rvm *rd, char *img, uvar size);
-
-
-
-/* For rvm_pseek(). */
-#define RSEEK_SET  0
-#define RSEEK_CURR 1
-#define RSEEK_END  2
-
-/* Get a section by name. */
-RvmSec *rvm_getsec(Rvm *rd, char *name);
-
-/* Create a new section. */
-RvmSec *rvm_makesec(Rvm *rd, char *name, uvar size);
-
-/* Removes a section. */
-void rvm_rmsec(Rvm *rd, char *name);
-
-/* Get a section's header. */
-rvm_shdr rvm_getshdr(RvmSec *sec);
-
-/* Set the entry count of the section header. */
-void rvm_setentcnt(RvmSec *sec, uint64_t entcnt);
-
-/* Seek on the section payload. */
-void rvm_pseek(RvmSec *sec, ivar offst, int seek);
-
-/* Returns the current pos in the payload. */
-uvar rvm_ptell(RvmSec *sec);
-
-/* Returns the size of the payload. */
-uvar rvm_getsize(RvmSec *sec);
-
-/* Resize the payload. */
-bool rvm_resize(RvmSec *sec, uvar newsz);
-
-/* Read from a section payload. Returns false if it tries to read out of bounds. */
-bool rvm_read(RvmSec *sec, void *buf, uvar len);
-
-/* Write to a section payload. Returns false if it tries to write out of bounds. */
-bool rvm_write(RvmSec *sec, void *buf, uvar len);
+/* Returns a ptr to the payload of the given shdr. Can be NULL. */
+void *bc_getpload(ByteCode *bd, rvm_shdr shdr);
 
 #endif // RVM_BCODE_H_

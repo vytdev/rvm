@@ -2,6 +2,12 @@
 #define RVM_CODEC_H_
 #include "config.h"
 
+
+/* This header contains deserialisers and
+   serialisers for primitives. */
+
+
+/* Big-endian compatibility. */
 #if defined(BO_BE)
 
 /* read 8 (1 byte) */
@@ -54,6 +60,10 @@
   } while (0)
 
 #else /* if defined(BO_LE) */
+
+/* Assuming that unaligned access will not cause
+   major faults on the little-endian processors
+   running this program. */
 
 #define read8(s)  ((s)[0])
 #define read16(s) (*(u16*)(void*)&(s)[0])

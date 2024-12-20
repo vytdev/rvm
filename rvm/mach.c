@@ -70,23 +70,81 @@ void dump_regs(void) {
 }
 
 
+static inline bool load_code(ByteCode *bd) {
+  if (!bd)
+    return false;
+  void *shdr_p = bc_getsect(bd, ".code");
+  if (!shdr_p) {
+    rlog("Could not locate section: .code\n");
+    return false;
+  }
+  rvm_shdr shdr = parse_rvm_shdr(shdr_p);
+  if (shdr.entcnt == 0 || shdr.size < shdr.entcnt * 8) {
+    rlog("entcnt is either zero or exceeds the section size.\n");
+    return false;
+  }
+  code = (uint64_t*)malloc(sizeof(uint64_t) * shdr.entcnt);
+  if (!code) {
+    rlog("Out of memory.\n");
+    return false;
+  }
+  codelen = shdr.entcnt;
+  char *pload = bc_getpload(bd, shdr);
+  if (!pload) {
+    rlog("Unable to resolve the payload of the '.code' section.\n");
+    return false;
+  }
+  for (uint64_t i = 0; i < codelen; i++)
+    code[i] = read64(pload + i * 8);
+  return true;
+}
+
+
+static inline bool load_data(ByteCode *bd) {
+  if (!bd)
+    return false;
+  void *shdr_p = bc_getsect(bd, ".data");
+  if (!shdr_p)
+    return true; /* .data section does not exist */
+  rvm_shdr shdr = parse_rvm_shdr(shdr_p);
+  if (shdr.entcnt == 0 || shdr.size < shdr.entcnt * 8) {
+    rlog("entcnt is either zero or exceeds the section size.\n");
+    return false;
+  }
+  data = (uint64_t*)malloc(sizeof(uint64_t) * shdr.entcnt);
+  if (!data) {
+    rlog("Out of memory.\n");
+    return false;
+  }
+  datalen = shdr.entcnt;
+  char *pload = bc_getpload(bd, shdr);
+  if (!pload) {
+    rlog("Unable to resolve the payload of the '.data' section.\n");
+    return false;
+  }
+  for (uint64_t i = 0; i < datalen; i++)
+    data[i] = read64(pload + i * 8);
+  return true;
+}
+
+
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   if (!prog || sz < 64 || !main_pc || vmstate != V_PROV)
     return false;
-  Rvm *rd = rvm_open();
-  if (!rd)
-    return false;
-  if (!rvm_load(rd, prog, sz)) {
-    rvm_close(rd);
+  ByteCode *bd = bc_open(prog, sz);
+  if (!bd) {
+    rlog("Out of memory.\n");
     return false;
   }
-  rvmhdr hdr = rvm_gethdr(rd);
+  rvmhdr hdr = bc_gethdr(bd);
   if (hdr.abi_ver != RVM_VER) {
-    rvm_close(rd);
+    rlog("Unsupported ABI version: %u\n", hdr.abi_ver);
+    bc_close(bd);
     return false;
   }
   if (hdr.type != RHT_LOADABLE) {
-    rvm_close(rd);
+    rlog("Cannot load a non-loadable image.\n");
+    bc_close(bd);
     return false;
   }
   /* Some setup. */
@@ -95,53 +153,16 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   *main_pc = hdr.entryp;
   src = prog;
   len = sz;
-  /* Load the program code. */
-  RvmSec *sec_code = rvm_getsec(rd, ".code");
-  if (!sec_code) {
-    rvm_close(rd);
+  /* Load the essential sections. */
+  if (!load_code(bd) || /* required */
+      !load_data(bd)) { /* optional */
+    /* Failure handling. */
+    if (code) free(code);
+    if (data) free(data);
+    bc_close(bd);
     return false;
   }
-  rvm_shdr hdr_code = rvm_getshdr(sec_code);
-  if (hdr_code.entcnt == 0) {
-    rvm_close(rd);
-    return false;
-  }
-  code = (uint64_t*)malloc(sizeof(uint64_t) * hdr_code.entcnt);
-  if (!code) {
-    rvm_close(rd);
-    return false;
-  }
-  codelen = hdr_code.entcnt;
-  char ibuf[8];
-  for (uint64_t i = 0; i < codelen; i++) {
-    if (!rvm_read(sec_code, ibuf, 8)) {
-      rvm_close(rd);
-      return false;
-    }
-    code[i] = read64(ibuf);
-  }
-  /* Load the program data. */
-  RvmSec *sec_data = rvm_getsec(rd, ".data");
-  if (sec_data) {
-    rvm_shdr hdr_data = rvm_getshdr(sec_data);
-    if (hdr_data.entcnt > 0) {
-      data = (uint64_t*)malloc(sizeof(uint64_t) * hdr_data.entcnt);
-      if (!data) {
-        rvm_close(rd);
-        return false;
-      }
-      datalen = hdr_data.entcnt;
-      char dbuf[8];
-      for (uint64_t i = 0; i < datalen; i++) {
-        if (!rvm_read(sec_data, dbuf, 8)) {
-          rvm_close(rd);
-          return false;
-        }
-        data[i] = read64(dbuf);
-      }
-    }
-  }
-  rvm_close(rd);
+  bc_close(bd);
   return true;
 }
 
@@ -245,7 +266,7 @@ void run_vm(int argc, char **argv) {
   uint64_t main_pc = 0;
   vmstate = V_PROV;
   if (!vload(bin, sz, &main_pc)) {
-    rlog("Failed to load executable image.\n");
+    rlog("Failed to load bytecode image.\n");
     ret_fail();
   }
   vmstate = V_RUNN;
