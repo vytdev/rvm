@@ -1,7 +1,8 @@
 #include "mach.h"
 #include "rvmbits.h"
-#include "codec.h"
 #include "config.h"
+#include "codec.h"
+#include "bcode.h"
 #include "util.h"
 #include "thread.h"
 #include <stdbool.h>
@@ -28,36 +29,6 @@ uint32_t TLOCAL tid       = 0;
 uint64_t TLOCAL reg[16];
 uint64_t TLOCAL *stack    = NULL;
 uint32_t TLOCAL stack_len = 0;
-
-
-bool checkmagic(char *src, uint64_t len) {
-  if (!src || len < 4 ||
-      src[0] != 0x7f ||
-      src[1] != 0x52 ||
-      src[2] != 0x56 ||
-      src[3] != 0x4d)
-    return false;
-  return true;
-}
-
-
-bool parse_rvmhdr(char *src, uint64_t len, rvmhdr *out) {
-  if (!src || len < 48 || !out || !checkmagic(src, len))
-    return false;
-  out->magic[0] = 0x7f;
-  out->magic[1] = 0x52;
-  out->magic[2] = 0x56;
-  out->magic[3] = 0x4d;
-  out->abi_ver  = read16(src+4);
-  out->type     = read8(src+6);
-                  /* (1B pad)*/
-  out->entry    = read64(src+8);
-  out->codoff   = read64(src+16);
-  out->codlen   = read64(src+24);
-  out->datoff   = read64(src+32);
-  out->datlen   = read64(src+40);
-  return true;
-}
 
 
 const char *statcd_msg(statcd n) {
@@ -100,43 +71,77 @@ void dump_regs(void) {
 
 
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
-  if (!prog || sz == 0 || !main_pc || vmstate != V_PROV)
+  if (!prog || sz < 64 || !main_pc || vmstate != V_PROV)
     return false;
-  rvmhdr hdr;
-  if (!parse_rvmhdr(prog, sz, &hdr))
+  Rvm *rd = rvm_open();
+  if (!rd)
     return false;
-  if (hdr.abi_ver != RVM_VER)
+  if (!rvm_load(rd, prog, sz)) {
+    rvm_close(rd);
     return false;
-  if (hdr.type != RTYP_EXEC)
+  }
+  rvmhdr hdr = rvm_gethdr(rd);
+  if (hdr.abi_ver != RVM_VER) {
+    rvm_close(rd);
     return false;
-  if (hdr.datoff + hdr.datlen * 8 >= sz)
+  }
+  if (hdr.type != RHT_LOADABLE) {
+    rvm_close(rd);
     return false;
+  }
   /* Some setup. */
   for (int i = 0; i < 16; i++)
     reg[i] = 0;
-  *main_pc = hdr.entry;
+  *main_pc = hdr.entryp;
   src = prog;
   len = sz;
   /* Load the program code. */
-  if (hdr.codlen * 8 > len || hdr.codoff > len || hdr.codlen * 8 + hdr.codoff > len)
+  RvmSec *sec_code = rvm_getsec(rd, ".code");
+  if (!sec_code) {
+    rvm_close(rd);
     return false;
-  code = (uint64_t*)malloc(hdr.codlen * sizeof(uint64_t));
-  if (!code)
-    return false;
-  codelen = hdr.codlen;
-  for (uint64_t i = 0; i < codelen; i++)
-    code[i] = read64(prog + hdr.codoff + i * 8);
-  /* Load the program data. */
-  if (hdr.datlen != 0) {
-    if (hdr.datlen * 8 > len || hdr.codoff > len || hdr.datlen * 8 + hdr.datoff > len)
-      return false;
-    data = (uint64_t*)malloc(hdr.datlen * sizeof(uint64_t));
-    if (!data)
-      return false;
-    datalen = hdr.datlen;
-    for (uint64_t i = 0; i < datalen; i++)
-      data[i] = read64(prog + hdr.datoff + i * 8);
   }
+  rvm_shdr hdr_code = rvm_getshdr(sec_code);
+  if (hdr_code.entcnt == 0) {
+    rvm_close(rd);
+    return false;
+  }
+  code = (uint64_t*)malloc(sizeof(uint64_t) * hdr_code.entcnt);
+  if (!code) {
+    rvm_close(rd);
+    return false;
+  }
+  codelen = hdr_code.entcnt;
+  char ibuf[8];
+  for (uint64_t i = 0; i < codelen; i++) {
+    if (!rvm_read(sec_code, ibuf, 8)) {
+      rvm_close(rd);
+      return false;
+    }
+    code[i] = read64(ibuf);
+  }
+  /* Load the program data. */
+  RvmSec *sec_data = rvm_getsec(rd, ".data");
+  if (sec_data) {
+    rvm_shdr hdr_data = rvm_getshdr(sec_data);
+    if (hdr_data.entcnt > 0) {
+      data = (uint64_t*)malloc(sizeof(uint64_t) * hdr_data.entcnt);
+      if (!data) {
+        rvm_close(rd);
+        return false;
+      }
+      datalen = hdr_data.entcnt;
+      char dbuf[8];
+      for (uint64_t i = 0; i < datalen; i++) {
+        if (!rvm_read(sec_data, dbuf, 8)) {
+          rvm_close(rd);
+          return false;
+        }
+        data[i] = read64(dbuf);
+      }
+    }
+  }
+  rvm_close(rd);
   return true;
 }
 

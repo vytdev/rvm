@@ -56,12 +56,6 @@ typedef int statcd;
 #define getf(f) (reg[RFL] & (f))
 
 
-/* Check the magic number in src. */
-bool checkmagic(char *src, uint64_t len);
-
-/* Parse rvmhdr structure from src. */
-bool parse_rvmhdr(char *src, uint64_t len, rvmhdr *out);
-
 /* Return stat code strings. */
 const char *statcd_msg(statcd n);
 

@@ -2,14 +2,17 @@
 
 7f 52 56 4d                # magic
 01 00                      # abi_ver
-00                         # type (RTYP_EXEC)
-00   # (padding)
-00 00 00 00 00 00 00 00    # entry
-30 00 00 00 00 00 00 00    # codoff
-12 00 00 00 00 00 00 00    # codlen
-00 00 00 00 00 00 00 00    # datoff
-00 00 00 00 00 00 00 00    # datlen
+00                         # type (RHT_LOADABLE)
+00                         # flags
+00 00 00 00 00 00 00 00    # entryp
+d8 00 00 00 00 00 00 00    # shoff
+01 00 00 00 00 00 00 00    # shnum
+d0 00 00 00 00 00 00 00    # stroff
+00 00 00 00 00 00 00 00    # (padding)
+00 00 00 00 00 00 00 00    # (padding)
+00 00 00 00 00 00 00 00    # (padding)
 
+# .code section:
 04 00 00 28 00 00 00 00    # mov %r0, #24
 93 00 00 04 00 00 00 00    # call fib
 03 00 0a 00 00 00 00 00    # mov %r0, %rv
@@ -31,3 +34,13 @@
 14 00 00 02 00 00 00 00    # add %r0, %r0, #2
 12 10 00 00 00 00 00 00    # pop %r1
 95 00 00 00 00 00 00 00    # ret
+
+# strtab:
+00 2e 63 6f 64 65 00 00    # .code
+
+# shtab (for code section):
+01 00 00 00                # name
+00 00 00 00                # (padding)
+40 00 00 00 00 00 00 00    # offset
+90 00 00 00 00 00 00 00    # size
+12 00 00 00 00 00 00 00    # entcnt

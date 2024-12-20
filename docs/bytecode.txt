@@ -1,6 +1,6 @@
 
   rvm bytecode format
-  Last updated: 20 Dec 2024 at 01:57 am GMT
+  Last updated: 20 Dec 2024 at 09:47 am GMT
 
 
 I. RVM header format
@@ -45,7 +45,7 @@ III. Table-section formats
   ====================
   name          4 B
   type          1 B   (notype, code, data)
-  binding       1 B   (global, internal, local)
+  bind          1 B   (global, internal, local)
   <padding>     2 B
   value         8 B
 

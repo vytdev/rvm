@@ -3,24 +3,81 @@
 #include <stdint.h>
 #include "config.h"
 
+
 typedef struct rvmhdr {
-  uint8_t  magic[4];
+  uint8_t  ident[4];
   uint16_t abi_ver;
   uint8_t  type;
-  uint64_t entry;
-  uint64_t codoff;
-  uint64_t codlen;
-  uint64_t datoff;
-  uint64_t datlen;
+  uint8_t  flags;
+  uint64_t entryp;
+  uint64_t shoff;   /* Offset to the section header table. */
+  uint64_t shnum;   /* Number of entry sections. */
+  uint64_t stroff;  /* Offset to the string table. */
 } rvmhdr;
+
+/* The magic number. */
+#define RHM_0     0  /* ident[0] */
+#define RHM_1     1  /* ident[1] */
+#define RHM_2     2  /* ident[2] */
+#define RHM_3     3  /* ident[3] */
+#define RMAG0    0x7f
+#define RMAG1    'R'   /* 0x52 */
+#define RMAG2    'V'   /* 0x56 */
+#define RMAG3    'M'   /* 0x4d */
+#define RMAGIC "\x7fRVM"
 
 /* ABI Version */
 #define RVM_VER 1
 
-/* Program types */
-#define RTYP_EXEC 0 /* executable image */
-#define RTYP_DLIB 1 /* dynamic library */
-#define RTYP_RAWO 2 /* raw object */
+/* Bytecode types */
+#define RHT_LOADABLE   0   /* Can be loaded and ran. */
+#define RHT_RAWOBJ     1   /* Not runnable. */
+
+/* Program flags */
+#define RHF_DEPENDENT  (1<<0)  /* Has dynamic dependencies. */
+#define RHF_EXPORTS    (1<<1)  /* Does export global symbols. */
+
+typedef struct rvm_shdr {
+  uint32_t name;     /* strndx */
+  uint64_t offset;   /* Offset to the section payload. */
+  uint64_t size;     /* Size of the section in file. */
+  uint64_t entcnt;   /* Number of array entries (optional). */
+} rvm_shdr;
+
+typedef struct rvm_symb {
+  uint32_t name;     /* strndx */
+  uint8_t  type;     /* Type of the symbol. */
+  uint8_t  bind;     /* Binding of the symbol. */
+  uint64_t value;    /* Value of the symbol. */
+} rvm_symb;
+
+/* Legal values for symbol types. */
+#define RST_NOTYPE    0  /* No type. This is not allocated in any sections. */
+#define RST_CODE      1  /* Allocated in the code section. */
+#define RST_DATA      2  /* Allocated in the data section. */
+
+/* Legal values for symbol bindings. */
+#define RSB_GLOBAL    0  /* Global symbol. Redifinitions are not allowed. */
+#define RSB_INTERNAL  1  /* Just like global, but the symbol is not exported. */
+#define RSB_LOCAL     2  /* This shadows the global symbols. Discarded after link. */
+
+typedef struct rvm_reloc {
+  uint64_t offset;   /* Offset to the source segment. */
+  uint64_t addend;   /* Add to the resolved symbol value. */
+  uint32_t name;     /* strndx */
+  uint8_t  nsrc;     /* The source segment. */
+  uint8_t  stype;    /* Substitution type. */
+} rvm_reloc;
+
+/* Legal values for the relocation source segment. */
+#define RRS_CODE      0  /* Code segment. */
+#define RRS_DATA      1  /* Data segment. */
+
+/* Legal values for the relocation substitution types. */
+#define RRT_ABS64     0  /* Substitute absolute 64-bit. */
+#define RRT_IMM40     1  /* Substitute 40-bit absolute immediate. */
+#define RRT_IMM40PC   2  /* Substitute 40-bit pc-relative immediate. */
+
 
 /*
  * Instruction encoding:
