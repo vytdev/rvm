@@ -131,9 +131,13 @@ static inline bool load_data(ByteCode *bd) {
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   if (!prog || sz < 64 || !main_pc || vmstate != V_PROV)
     return false;
+  if (!check_magic(prog)) {
+    rlog("Invalid magic number.\n");
+    return false;
+  }
   ByteCode *bd = bc_open(prog, sz);
   if (!bd) {
-    rlog("Out of memory.\n");
+    rlog("Invalid image header or insufficient memory.\n");
     return false;
   }
   rvmhdr hdr = bc_gethdr(bd);
