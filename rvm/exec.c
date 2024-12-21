@@ -1047,47 +1047,44 @@ vminst(JNX) {
 
 vminst(LOOP) {
   if (--reg[rA(i)] != 0)
-    reg[RPC] += im(i);
+    br_rel();
   vmbrk();
 }
 
+#ifndef PERF_
+#  define setup_call(n) do { \
+       statcd s;             \
+       s = vpush(reg[RLR]);  \
+       if (s != S_OK)        \
+         return s;           \
+       s = vpush(reg[RBP]);  \
+       if (s != S_OK)        \
+         return s;           \
+       reg[RLR] = reg[RPC];  \
+       reg[RBP] = reg[RSP];  \
+       reg[RPC] += (n);      \
+     } while (0)
+#else
+#  define setup_call(n) do { \
+       vpush(reg[RLR]);      \
+       vpush(reg[RBP]);      \
+       reg[RLR] = reg[RPC];  \
+       reg[RBP] = reg[RSP];  \
+       reg[RPC] += (n);      \
+     } while (0)
+#endif
+
 vminst(CALL) {
-  #ifndef PERF_
-  statcd s;
-  s = vpush(reg[RLR]);
-  if (s != S_OK)
-    return s;
-  s = vpush(reg[RBP]);
-  if (s != S_OK)
-    return s;
-  #else
-  vpush(reg[RLR]);
-  vpush(reg[RBP]);
-  #endif
-  reg[RLR] = reg[RPC];
-  reg[RBP] = reg[RSP];
-  reg[RPC] = im(i);
+  setup_call(im(i));
   vmbrk();
 }
 
 vminst(CALLR) {
-  #ifndef PERF_
-  statcd s;
-  s = vpush(reg[RLR]);
-  if (s != S_OK)
-    return s;
-  s = vpush(reg[RBP]);
-  if (s != S_OK)
-    return s;
-  #else
-  vpush(reg[RLR]);
-  vpush(reg[RBP]);
-  #endif
-  reg[RLR] = reg[RPC];
-  reg[RBP] = reg[RSP];
-  reg[RPC] = reg[rA(i)];
+  setup_call(reg[rA(i)]);
   vmbrk();
 }
+
+#undef setup_call
 
 vminst(RET) {
   subroutine_ret:
