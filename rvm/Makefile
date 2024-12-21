@@ -12,7 +12,7 @@ ifneq ($(origin BENCHMARK), undefined)
   CFLAGS+= -DBENCHMARK_
 endif
 
-OBJ= main.o bcode.o util.o mach.o exec.o vmcall.o
+OBJ= bcode.o exec.o mach.o main.o util.o vmcall.o
 TRG= rvm
 
 all: release
