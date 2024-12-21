@@ -325,6 +325,8 @@ OP_CALL,           /* [    M]   call a subroutine */
 OP_CALLR,          /* [A    ]   setup a new frame and set reg A to %pc */
 OP_RET,            /* [     ]   return to the caller */
 OP_THR,            /* [     ]   set FE, then return to the caller */
+OP_SAVE,           /* [     ]   save all the gpr (%r0 - %r9) */
+OP_RSTR,           /* [     ]   restore all the gpr (%r0 - %r9) */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
 

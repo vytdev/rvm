@@ -1110,6 +1110,30 @@ vminst(THR) {
   goto subroutine_ret;
 }
 
+vminst(SAVE) {
+  for (int i = 0; i < 10; i++) {
+    #ifndef PERF_
+    statcd s = vpush(reg[i]);
+    if (s != S_OK) return s;
+    #else
+    vpush(reg[i]);
+    #endif
+  }
+  vmbrk();
+}
+
+vminst(RSTR) {
+  for (int i = 9; i >= 0; i--) {
+    #ifndef PERF_
+    statcd s = vpop(&reg[i]);
+    if (s != S_OK) return s;
+    #else
+    vpop(&reg[i]);
+    #endif
+  }
+  vmbrk();
+}
+
 #undef br_abs
 #undef br_rel
 default: return S_ILL; }
