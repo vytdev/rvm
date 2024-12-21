@@ -1,4 +1,0 @@
-lexer.o: lexer.c parser.h ../rvm/config.h
-main.o: main.c util.h ../rvm/util.h ../rvm/config.h ../rvm/config.h \
- parser.h
-util.o: util.c ../rvm/util.h ../rvm/config.h ../rvm/config.h

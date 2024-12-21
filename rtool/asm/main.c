@@ -1,5 +1,5 @@
-#include "util.h"
-#include "../rvm/config.h"
+#include "../util.h"
+#include "../../rvm/config.h"
 #include "parser.h"
 
 int main(int argc, char **argv) {

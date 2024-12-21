@@ -1,5 +1,6 @@
 #include "../rvm/util.h"
 #include "../rvm/config.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 

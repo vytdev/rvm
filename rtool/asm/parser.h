@@ -1,6 +1,6 @@
 #ifndef RAS_PARSER_H_
 #define RAS_PARSER_H_
-#include "../rvm/config.h"
+#include "../../rvm/config.h"
 #include <stdbool.h>
 
 typedef uvar pos_t;

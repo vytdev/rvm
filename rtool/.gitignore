@@ -1,3 +1,4 @@
 # Built files.
+.depend
 *.o
-ras
+rtool
