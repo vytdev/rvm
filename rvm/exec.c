@@ -9,6 +9,26 @@ static statcd vm__interpreter(uint64_t start_pc);
 
 /* Macro to fetch the next instruction. */
 #define fetch() (code[pc++])
+/* Macro to push into stack. */
+#ifdef PERF_
+#  define push(v) (stack[sp++] = (v))
+#else
+#  define push(v) do {     \
+      if (sp >= stack_len) \
+        return S_STOVF;    \
+      stack[sp++] = (v);   \
+    } while (0)
+#endif
+/* Macro to pop from stack. */
+#ifdef PERF_
+#  define pop(v) ((v) = stack[--sp])
+#else
+#  define pop(v) do {     \
+      if (sp == 0)        \
+        return S_STUND;   \
+      (v) = stack[--sp];  \
+    } while (0)
+#endif
 /* Macro to check if a const rel index is valid. */
 #ifdef PERF_
 #  define check_k(n)
@@ -44,6 +64,9 @@ void vmexec(uint64_t start_pc) {
 
 static statcd vm__interpreter(uint64_t start_pc) {
   register uint64_t pc = start_pc;
+  register uint64_t bp = 0;
+  register uint64_t sp = 0;
+  register uint64_t lr = 0;
 
   interp_start:
 
@@ -112,17 +135,17 @@ vminst(LOD) {
 vminst(LODS) {
   u64 idx = im(i);
   #ifndef PERF_
-  if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
+  if (idx >= sp - bp || stack_len <= bp + idx)
     return S_OOB;
   #endif
-  reg[rA(i)] = stack[reg[RBP] + idx];
+  reg[rA(i)] = stack[bp + idx];
   vmbrk();
 }
 
 vminst(LODA) {
-  u64 idx = reg[RBP] - 3 - im(i);
+  u64 idx = bp - 3 - im(i);
   #ifndef PERF_
-  if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
+  if (idx > bp || idx < stack[bp - 1])
     return S_OOB;
   #endif
   reg[rA(i)] = stack[idx];
@@ -130,9 +153,9 @@ vminst(LODA) {
 }
 
 vminst(LODAR) {
-  u64 idx = reg[RBP] - 3 - reg[rB(i)];
+  u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
-  if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
+  if (idx > bp || idx < stack[bp - 1])
     return S_OOB;
   #endif
   reg[rA(i)] = stack[idx];
@@ -152,17 +175,17 @@ vminst(STR) {
 vminst(STRS) {
   u64 idx = im(i);
   #ifndef PERF_
-  if (idx >= reg[RSP] - reg[RBP] || stack_len <= reg[RBP] + idx)
+  if (idx >= sp - bp || stack_len <= bp + idx)
     return S_OOB;
   #endif
-  stack[reg[RBP] + idx] = reg[rA(i)];
+  stack[bp + idx] = reg[rA(i)];
   vmbrk();
 }
 
 vminst(STRA) {
-  u64 idx = reg[RBP] - 3 - im(i);
+  u64 idx = bp - 3 - im(i);
   #ifndef PERF_
-  if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
+  if (idx > bp || idx < stack[bp - 1])
     return S_OOB;
   #endif
   stack[idx] = reg[rA(i)];
@@ -170,9 +193,9 @@ vminst(STRA) {
 }
 
 vminst(STRAR) {
-  u64 idx = reg[RBP] - 3 - reg[rB(i)];
+  u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
-  if (idx > reg[RBP] || idx < stack[reg[RBP] - 1])
+  if (idx > bp || idx < stack[bp - 1])
     return S_OOB;
   #endif
   stack[idx] = reg[rA(i)];
@@ -187,49 +210,27 @@ vminst(SWP) {
 }
 
 vminst(PUSH) {
-  #ifndef PERF_
-  statcd s = vpush(reg[rA(i)]);
-  if (s != S_OK)
-    return s;
-  #else
-  vpush(reg[rA(i)]);
-  #endif
+  push(reg[rA(i)]);
   vmbrk();
 }
 
 vminst(PUSHI) {
-  #ifndef PERF_
-  statcd s = vpush(im(i));
-  if (s != S_OK)
-    return s;
-  #else
-  vpush(im(i));
-  #endif
+  push(im(i));
   vmbrk();
 }
 
 vminst(PUSHK) {
-  #ifndef PERF_
   check_k(im(i));
-  statcd s = vpush(gconst(im(i)));
-  if (s != S_OK)
-    return s;
-  #else
-  vpush(gconst(im(i)));
-  #endif
+  push(gconst(im(i)));
   vmbrk();
 }
 
 vminst(POP) {
   #ifndef PERF_
-  if (reg[RSP] <= reg[RBP])
+  if (sp <= bp)
     return S_STUND;
-  statcd s = vpop(&reg[rA(i)]);
-  if (s != S_OK)
-    return s;
-  #else
-  vpop(&reg[rA(i)]);
   #endif
+  pop(reg[rA(i)]);
   vmbrk();
 }
 
@@ -1053,28 +1054,16 @@ vminst(LOOP) {
   vmbrk();
 }
 
-#ifndef PERF_
-#  define setup_call(n) do { \
-       statcd s;             \
-       s = vpush(reg[RLR]);  \
-       if (s != S_OK)        \
-         return s;           \
-       s = vpush(reg[RBP]);  \
-       if (s != S_OK)        \
-         return s;           \
-       reg[RLR] = pc;        \
-       reg[RBP] = reg[RSP];  \
-       pc += (n);            \
-     } while (0)
-#else
-#  define setup_call(n) do { \
-       vpush(reg[RLR]);      \
-       vpush(reg[RBP]);      \
-       reg[RLR] = pc;        \
-       reg[RBP] = reg[RSP];  \
-       pc += (n);            \
-     } while (0)
-#endif
+#undef br_abs
+#undef br_rel
+
+#define setup_call(n) do { \
+     push(lr);     \
+     push(bp);     \
+     lr = pc;      \
+     bp = sp;      \
+     pc += (n);    \
+   } while (0)
 
 vminst(CALL) {
   setup_call(im(i));
@@ -1090,20 +1079,10 @@ vminst(CALLR) {
 
 vminst(RET) {
   subroutine_ret:
-  reg[RSP] = reg[RBP];
-  pc = reg[RLR];
-  #ifndef PERF_
-  statcd s;
-  s = vpop(&reg[RBP]);
-  if (s != S_OK)
-    return s;
-  s = vpop(&reg[RLR]);
-  if (s != S_OK)
-    return s;
-  #else
-  vpop(&reg[RBP]);
-  vpop(&reg[RLR]);
-  #endif
+  sp = bp;
+  pc = lr;
+  pop(bp);
+  pop(lr);
   vmbrk();
 }
 
@@ -1113,26 +1092,18 @@ vminst(THR) {
 }
 
 vminst(SAVE) {
-  for (int i = 0; i < 10; i++) {
-    #ifndef PERF_
-    statcd s = vpush(reg[i]);
-    if (s != S_OK) return s;
-    #else
-    vpush(reg[i]);
-    #endif
-  }
+  for (int i = 0; i < 10; i++)
+    push(reg[i]);
   vmbrk();
 }
 
 vminst(RSTR) {
-  for (int i = 9; i >= 0; i--) {
-    #ifndef PERF_
-    statcd s = vpop(&reg[i]);
-    if (s != S_OK) return s;
-    #else
-    vpop(&reg[i]);
-    #endif
-  }
+  #ifndef PERF_
+  if (sp < bp || sp - bp < 10)
+    return S_STUND;
+  #endif
+  for (int i = 9; i >= 0; i--)
+    pop(reg[i]);
   vmbrk();
 }
 
@@ -1146,7 +1117,41 @@ vminst(JRN) {
   vmbrk();
 }
 
-#undef br_abs
-#undef br_rel
+vminst(SAL) {
+  #ifndef PERF_
+  if (stack_len <= sp || stack_len - sp < im(i))
+    return S_STOVF;
+  #endif
+  sp += im(i);
+  vmbrk();
+}
+
+vminst(SALR) {
+  #ifndef PERF_
+  if (stack_len <= sp || stack_len - sp < reg[rA(i)])
+    return S_STOVF;
+  #endif
+  sp += reg[rA(i)];
+  vmbrk();
+}
+
+vminst(SDL) {
+  #ifndef PERF_
+  if (sp < bp || sp - bp < im(i))
+    return S_STUND;
+  #endif
+  sp -= im(i);
+  vmbrk();
+}
+
+vminst(SDLR) {
+  #ifndef PERF_
+  if (sp < bp || sp - bp < reg[rA(i)])
+    return S_STUND;
+  #endif
+  sp -= reg[rA(i)];
+  vmbrk();
+}
+
 default: return S_ILL; }
 }

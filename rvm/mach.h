@@ -71,10 +71,6 @@ bool vth_init(uint32_t stlen);
 /* Free thread ctx. Not allowed in provisioning state. */
 bool vth_free(void);
 
-/* Stack push and pop funcs. */
-statcd vpush(uint64_t v);
-statcd vpop(uint64_t *o);
-
 /* Print the caller thread's stats as a runtime error. */
 void show_err(statcd s);
 

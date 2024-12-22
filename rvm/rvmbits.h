@@ -116,9 +116,9 @@ typedef struct rvm_reloc {
 #define R8  8
 #define R9  9
 #define RRV 10 /* return value */
-#define RLR 11 /* link register */
-#define RBP 12 /* base pointer */
-#define RSP 13 /* stack pointer */
+#define R11 11 /* <reserved> */
+#define R12 12 /* <reserved> */
+#define R13 13 /* <reserved> */
 #define R14 14 /* <reserved> */
 #define RFL 15 /* flags register */
 
@@ -329,6 +329,10 @@ OP_SAVE,           /* [     ]   save all the gpr (%r0 - %r9) */
 OP_RSTR,           /* [     ]   restore all the gpr (%r0 - %r9) */
 OP_JR,             /* [A    ]   unconditional (abs) jump to pc A */
 OP_JRN,            /* [A    ]   unconditional (rel) jump by offset A */
+OP_SAL,            /* [    M]   allocate M items on stack */
+OP_SALR,           /* [A    ]   allocate A items on stack */
+OP_SDL,            /* [    M]   deallocate M items from stack */
+OP_SDLR,           /* [A    ]   deallocate A items from stack */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
 

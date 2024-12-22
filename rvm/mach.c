@@ -61,9 +61,9 @@ void dump_regs(void) {
   preg("r8", R8);
   preg("r9", R9);
   preg("rv", RRV);
-  preg("lr", RLR);
-  preg("bp", RBP);
-  preg("sp", RSP);
+  preg("r11", R11);
+  preg("r12", R12);
+  preg("r13", R13);
   preg("r14", R14);
   preg("fl", RFL);
   #undef preg
@@ -201,35 +201,11 @@ bool vth_free(void) {
 }
 
 
-statcd vpush(uint64_t v) {
-  #ifndef PERF_
-  if (!stack || stack_len == 0)
-    return S_ERR;
-  if (reg[RSP] >= stack_len)
-    return S_STOVF;
-  #endif
-  stack[reg[RSP]++] = v;
-  return S_OK;
-}
-
-
-statcd vpop(uint64_t *o) {
-  #ifndef PERF_
-  if (!stack || stack_len == 0 || !o)
-    return S_ERR;
-  if (reg[RSP] == 0)
-    return S_STUND;
-  #endif
-  *o = stack[--reg[RSP]];
-  return S_OK;
-}
-
-
 void show_err(statcd s) {
   vmfmsg(s);
   /* Some useful stats. */
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
-  fprintf(stderr, "  stack used:  %"V64S"u B\n", reg[RSP] * 8);
+  //fprintf(stderr, "  stack used:  %"V64S"u B\n", stack_used * 8);
   fprintf(stderr, "  stack size:  %"V64S"u B\n", (u64)stack_len * 8);
   fprintf(stderr, "  flags reg:  ");
   /* Print the contents of the %fl register. */
