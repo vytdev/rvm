@@ -25,10 +25,14 @@ char     vmstate          = V_INAC;
 char     exec_mode        = X_USER;
 
 /* Thread context. */
-uint32_t TLOCAL tid       = 0;
-uint64_t TLOCAL reg[16];
-uint64_t TLOCAL *stack    = NULL;
-uint32_t TLOCAL stack_len = 0;
+TLOCAL uint32_t tid       = 0;
+TLOCAL uint64_t reg[16];
+TLOCAL uint64_t *stack    = NULL;
+TLOCAL uint32_t stack_len = 0;
+TLOCAL uint64_t last_pc   = 0;
+TLOCAL uint64_t last_sp   = 0;
+TLOCAL uint64_t last_bp   = 0;
+TLOCAL uint64_t last_lr   = 0;
 
 
 const char *statcd_msg(statcd n) {
@@ -49,23 +53,23 @@ const char *statcd_msg(statcd n) {
 
 void dump_regs(void) {
   #define preg(n,s) \
-    fprintf(stderr, "  %%" n "  0x%016"V64S"x  %"V64S"d\n", reg[(s)], reg[(s)])
-  preg("r0", R0);
-  preg("r1", R1);
-  preg("r2", R2);
-  preg("r3", R3);
-  preg("r4", R4);
-  preg("r5", R5);
-  preg("r6", R6);
-  preg("r7", R7);
-  preg("r8", R8);
-  preg("r9", R9);
-  preg("rv", RRV);
+    fprintf(stderr, "  %%" n "  0x%016"V64S"x  %+"V64S"d\n", reg[(s)], reg[(s)])
+  preg("r0 ", R0);
+  preg("r1 ", R1);
+  preg("r2 ", R2);
+  preg("r3 ", R3);
+  preg("r4 ", R4);
+  preg("r5 ", R5);
+  preg("r6 ", R6);
+  preg("r7 ", R7);
+  preg("r8 ", R8);
+  preg("r9 ", R9);
+  preg("rv ", RRV);
   preg("r11", R11);
   preg("r12", R12);
   preg("r13", R13);
   preg("r14", R14);
-  preg("fl", RFL);
+  preg("fl ", RFL);
   #undef preg
 }
 
@@ -205,11 +209,12 @@ void show_err(statcd s) {
   vmfmsg(s);
   /* Some useful stats. */
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
-  //fprintf(stderr, "  stack used:  %"V64S"u B\n", stack_used * 8);
+  fprintf(stderr, "  stack used:  %"V64S"u B\n", last_sp * 8);
   fprintf(stderr, "  stack size:  %"V64S"u B\n", (u64)stack_len * 8);
   fprintf(stderr, "  flags reg:  ");
   /* Print the contents of the %fl register. */
-  #define print_if_set(f, txt) (getf(f) ? fprintf(stderr, (" " txt)) : 0)
+  #define print_if_set(f, txt) \
+    (getf(f) ? fprintf(stderr, (" " txt)) : 0)
   print_if_set(FC, "CF");
   print_if_set(FO, "OF");
   print_if_set(FS, "SF");
@@ -223,8 +228,17 @@ void show_err(statcd s) {
   #undef print_if_set
   putc('\n', stderr); /* line-feed for the "flags reg" line */
   /* Dump the contents of all registers. */
-  fprintf(stderr, "  registers:\n");
+  fprintf(stderr, "  (program registers)\n");
   dump_regs();
+  /* Dump the internal states. */
+  #define print_state(name, st) \
+    fprintf(stderr, "  " name "  0x%016"V64S"x  %"V64S"u\n", (st), (st))
+  fprintf(stderr, "  (interpreter state)\n");
+  print_state("prog cntr:", last_pc);
+  print_state("stack ptr:", last_sp);
+  print_state("frame ptr:", last_bp);
+  print_state("link reg: ", last_lr);
+  #undef print_state
 }
 
 

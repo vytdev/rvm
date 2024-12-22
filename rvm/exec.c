@@ -7,15 +7,24 @@
 /* Prototype for the vm__interpreter() function. */
 static statcd vm__interpreter(uint64_t start_pc);
 
-/* Macro to fetch the next instruction. */
-#define fetch() (code[pc++])
+/* Some interpreter macros. */
+#define fetch()   (code[pc++])
+#define vminst(n) case (OP_ ## n):
+#define inext()   goto interp_start
+#define stop(e) do { \
+    last_pc = pc; \
+    last_bp = bp; \
+    last_sp = sp; \
+    last_lr = lr; \
+    return (e);   \
+  } while (0)
 /* Macro to push into stack. */
 #ifdef PERF_
 #  define push(v) (stack[sp++] = (v))
 #else
 #  define push(v) do {     \
       if (sp >= stack_len) \
-        return S_STOVF;    \
+        stop(S_STOVF);     \
       stack[sp++] = (v);   \
     } while (0)
 #endif
@@ -25,7 +34,7 @@ static statcd vm__interpreter(uint64_t start_pc);
 #else
 #  define pop(v) do {     \
       if (sp == 0)        \
-        return S_STUND;   \
+        stop(S_STUND);    \
       (v) = stack[--sp];  \
     } while (0)
 #endif
@@ -35,7 +44,7 @@ static statcd vm__interpreter(uint64_t start_pc);
 #else
 #  define check_k(n) do { \
       if (pc + (n) >= codelen) \
-        return S_OOB;     \
+        stop(S_OOB);     \
     } while (0)
 #endif
 /* Macro to read a const. Must be preceded by check_k(). */
@@ -73,7 +82,7 @@ static statcd vm__interpreter(uint64_t start_pc) {
   /* Make sure we're still reading within the bytecode. */
   #ifndef PERF_
   if (pc >= codelen)
-    return S_ILL;
+    stop(S_ILL);
   #endif
 
   /* For benchmarking. */
@@ -84,229 +93,227 @@ static statcd vm__interpreter(uint64_t start_pc) {
 
 /* Macros for opcode implementation. */
 switch ((opcode)op(i)) {
-#define vminst(n) case (OP_ ## n):
-#define vmbrk()   goto interp_start
 
 /* Miscellaneous. */
 
 vminst(NOP) {
-  vmbrk();
+  inext();
 }
 
 vminst(IVC) {
   statcd s = vmcall(im(i) & 0xffff);
   if (s != S_OK)
-    return s;
-  vmbrk();
+    stop(s);
+  inext();
 }
 
 vminst(HLT) {
-  return S_TERM;
+  stop(S_TERM);
 }
 
 /* Data manipulation. */
 
 vminst(MOV) {
   reg[rA(i)] = reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(MOVI) {
   reg[rA(i)] = im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(MOVK) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(LOD) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= datalen)
-    return S_OOB;
+    stop(S_OOB);
   #endif
   reg[rA(i)] = data[idx];
-  vmbrk();
+  inext();
 }
 
 vminst(LODS) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
-    return S_OOB;
+    stop(S_OOB);
   #endif
   reg[rA(i)] = stack[bp + idx];
-  vmbrk();
+  inext();
 }
 
 vminst(LODA) {
   u64 idx = bp - 3 - im(i);
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    return S_OOB;
+    stop(S_OOB);
   #endif
   reg[rA(i)] = stack[idx];
-  vmbrk();
+  inext();
 }
 
 vminst(LODAR) {
   u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    return S_OOB;
+    stop(S_OOB);
   #endif
   reg[rA(i)] = stack[idx];
-  vmbrk();
+  inext();
 }
 
 vminst(STR) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= datalen)
-    return S_OOB;
+    stop(S_OOB);
   #endif
   data[idx] = reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(STRS) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
-    return S_OOB;
+    stop(S_OOB);
   #endif
   stack[bp + idx] = reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(STRA) {
   u64 idx = bp - 3 - im(i);
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    return S_OOB;
+    stop(S_OOB);
   #endif
   stack[idx] = reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(STRAR) {
   u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    return S_OOB;
+    stop(S_OOB);
   #endif
   stack[idx] = reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(SWP) {
   u64 tmp = reg[rA(i)];
   reg[rA(i)] = reg[rB(i)];
   reg[rB(i)] = tmp;
-  vmbrk();
+  inext();
 }
 
 vminst(PUSH) {
   push(reg[rA(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(PUSHI) {
   push(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(PUSHK) {
   check_k(im(i));
   push(gconst(im(i)));
-  vmbrk();
+  inext();
 }
 
 vminst(POP) {
   #ifndef PERF_
   if (sp <= bp)
-    return S_STUND;
+    stop(S_STUND);
   #endif
   pop(reg[rA(i)]);
-  vmbrk();
+  inext();
 }
 
 /* Integer arithmetic. */
 
 vminst(ADD) {
   reg[rA(i)] = reg[rB(i)] + reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(ADDI) {
   reg[rA(i)] = reg[rB(i)] + im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(ADDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] + gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(SUB) {
   reg[rA(i)] = reg[rB(i)] - reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(SUBI) {
   reg[rA(i)] = reg[rB(i)] - im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(SUBIR) {
   reg[rA(i)] = im(i) - reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(SUBK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] - gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(SUBKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) - reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(MUL) {
   reg[rA(i)] = reg[rB(i)] * reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(MULI) {
   reg[rA(i)] = reg[rB(i)] * im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(MULK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] * gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(IMUL) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
       (int64_t)reg[rC(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(IMULI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
       (int64_t)im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(IMULK) {
@@ -314,55 +321,55 @@ vminst(IMULK) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] *
       (int64_t)gconst(im(i)));
-  vmbrk();
+  inext();
 }
 
 vminst(DIV) {
   reg[rA(i)] = reg[rB(i)] / reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(DIVI) {
   reg[rA(i)] = reg[rB(i)] / im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(DIVIR) {
   reg[rA(i)] = im(i) / reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(DIVK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] / gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(DIVKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) / reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(IDIV) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)reg[rC(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(IDIVI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(IDIVIR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)im(i) /
       (int64_t)reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(IDIVK) {
@@ -370,7 +377,7 @@ vminst(IDIVK) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] /
       (int64_t)gconst(im(i)));
-  vmbrk();
+  inext();
 }
 
 vminst(IDIVKR) {
@@ -378,55 +385,55 @@ vminst(IDIVKR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)gconst(im(i)) /
       (int64_t)reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(MOD) {
   reg[rA(i)] = reg[rB(i)] % reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(MODI) {
   reg[rA(i)] = reg[rB(i)] % im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(MODIR) {
   reg[rA(i)] = im(i) % reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(MODK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] % gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(MODKR) {
   check_k(im(i));
   reg[rA(i)] = gconst(im(i)) % reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(IMOD) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)reg[rC(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(IMODI) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(IMODIR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)im(i) %
       (int64_t)reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(IMODK) {
@@ -434,7 +441,7 @@ vminst(IMODK) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)reg[rB(i)] %
       (int64_t)gconst(im(i)));
-  vmbrk();
+  inext();
 }
 
 vminst(IMODKR) {
@@ -442,77 +449,77 @@ vminst(IMODKR) {
   reg[rA(i)] = (uint64_t)(
       (int64_t)gconst(im(i)) %
       (int64_t)reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(INC) {
   reg[rA(i)]++;
-  vmbrk();
+  inext();
 }
 
 vminst(DEC) {
   reg[rA(i)]--;
-  vmbrk();
+  inext();
 }
 
 vminst(NEG) {
   reg[rA(i)] = -reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 /* Bitwise ops. */
 
 vminst(AND) {
   reg[rA(i)] = reg[rB(i)] & reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(ANDI) {
   reg[rA(i)] = reg[rB(i)] & im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(ANDK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] & gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(IOR) {
   reg[rA(i)] = reg[rB(i)] | reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(IORI) {
   reg[rA(i)] = reg[rB(i)] | im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(IORK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] | gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(XOR) {
   reg[rA(i)] = reg[rB(i)] ^ reg[rC(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(XORI) {
   reg[rA(i)] = reg[rB(i)] ^ im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(XORK) {
   check_k(im(i));
   reg[rA(i)] = reg[rB(i)] ^ gconst(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(NOT) {
   reg[rA(i)] = ~reg[rB(i)];
-  vmbrk();
+  inext();
 }
 
 #define do_shift(op, a, b) (reg[rA(i)] = ((b) >= 64) ? 0 : ((a) op (b)))
@@ -521,42 +528,42 @@ vminst(SHL) {
   do_shift(<<,
       reg[rB(i)],
       reg[rC(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(SHLI) {
   do_shift(<<,
       reg[rB(i)],
       im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(SHLIR) {
   do_shift(<<,
       im(i),
       reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(SHR) {
   do_shift(>>,
       reg[rB(i)],
       reg[rC(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(SHRI) {
   do_shift(>>,
       reg[rB(i)],
       im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(SHRIR) {
   do_shift(>>,
       im(i),
       reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 #undef do_shift
@@ -565,42 +572,42 @@ vminst(ROL) {
   u64 v = reg[rB(i)];
   u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = rol64(v, c);
-  vmbrk();
+  inext();
 }
 
 vminst(ROLI) {
   u64 v = reg[rB(i)];
   u64 c = mod64(im(i));
   reg[rA(i)] = rol64(v, c);
-  vmbrk();
+  inext();
 }
 
 vminst(ROLIR) {
   u64 v = im(i);
   u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = rol64(v, c);
-  vmbrk();
+  inext();
 }
 
 vminst(ROR) {
   u64 v = reg[rB(i)];
   u64 c = mod64(reg[rC(i)]);
   reg[rA(i)] = ror64(v, c);
-  vmbrk();
+  inext();
 }
 
 vminst(RORI) {
   u64 v = reg[rB(i)];
   u64 c = mod64(im(i));
   reg[rA(i)] = ror64(v, c);
-  vmbrk();
+  inext();
 }
 
 vminst(RORIR) {
   u64 v = im(i);
   u64 c = mod64(reg[rB(i)]);
   reg[rA(i)] = ror64(v, c);
-  vmbrk();
+  inext();
 }
 
 /* Bit test */
@@ -620,48 +627,48 @@ vminst(RORIR) {
 
 vminst(BT) {
   bt_imm();
-  vmbrk();
+  inext();
 }
 
 vminst(BTG) {
   bt_reg();
-  vmbrk();
+  inext();
 }
 
 vminst(BTS) {
   bt_imm();
   reg[rA(i)] = bit_set(reg[rA(i)], bval_imm());
-  vmbrk();
+  inext();
 }
 
 vminst(BTSG) {
   bt_reg();
   reg[rA(i)] = bit_set(reg[rA(i)], bval_reg());
-  vmbrk();
+  inext();
 }
 
 vminst(BTR) {
   bt_imm();
   reg[rA(i)] = bit_clr(reg[rA(i)], bval_imm());
-  vmbrk();
+  inext();
 }
 
 vminst(BTRG) {
   bt_reg();
   reg[rA(i)] = bit_clr(reg[rA(i)], bval_reg());
-  vmbrk();
+  inext();
 }
 
 vminst(BTC) {
   bt_imm();
   reg[rA(i)] = bit_cml(reg[rA(i)], bval_imm());
-  vmbrk();
+  inext();
 }
 
 vminst(BTCG) {
   bt_reg();
   reg[rA(i)] = bit_cml(reg[rA(i)], bval_reg());
-  vmbrk();
+  inext();
 }
 
 #undef bval_imm
@@ -698,31 +705,31 @@ vminst(BTCG) {
 
 vminst(CMP) {
   do_cmp(reg[rA(i)], reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(CMPI) {
   do_cmp(reg[rA(i)], im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(CMPIR) {
   do_cmp(im(i), reg[rA(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(CMPK) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_cmp(reg[rA(i)], k);
-  vmbrk();
+  inext();
 }
 
 vminst(CMPKR) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_cmp(k, reg[rA(i)]);
-  vmbrk();
+  inext();
 }
 
 #undef do_cmp
@@ -739,19 +746,19 @@ vminst(CMPKR) {
 
 vminst(TEST) {
   do_test(reg[rA(i)], reg[rB(i)]);
-  vmbrk();
+  inext();
 }
 
 vminst(TESTI) {
   do_test(reg[rA(i)], im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(TESTK) {
   check_k(im(i));
   u64 k = gconst(im(i));
   do_test(reg[rA(i)], k);
-  vmbrk();
+  inext();
 }
 
 #undef do_test
@@ -761,156 +768,156 @@ vminst(TESTK) {
 
 vminst(STC) {
   setf(FC);
-  vmbrk();
+  inext();
 }
 
 vminst(STO) {
   setf(FO);
-  vmbrk();
+  inext();
 }
 
 vminst(STS) {
   setf(FS);
-  vmbrk();
+  inext();
 }
 
 vminst(STZ) {
   setf(FZ);
-  vmbrk();
+  inext();
 }
 
 vminst(STE) {
   setf(FE);
-  vmbrk();
+  inext();
 }
 
 vminst(STG) {
   setf(FG);
-  vmbrk();
+  inext();
 }
 
 vminst(STL) {
   setf(FL);
-  vmbrk();
+  inext();
 }
 
 vminst(STA) {
   setf(FA);
-  vmbrk();
+  inext();
 }
 
 vminst(STB) {
   setf(FB);
-  vmbrk();
+  inext();
 }
 
 vminst(STQ) {
   setf(FQ);
-  vmbrk();
+  inext();
 }
 
 /* Clear flags */
 
 vminst(CLC) {
   clrf(FC);
-  vmbrk();
+  inext();
 }
 
 vminst(CLO) {
   clrf(FO);
-  vmbrk();
+  inext();
 }
 
 vminst(CLS) {
   clrf(FS);
-  vmbrk();
+  inext();
 }
 
 vminst(CLZ) {
   clrf(FZ);
-  vmbrk();
+  inext();
 }
 
 vminst(CLE) {
   clrf(FE);
-  vmbrk();
+  inext();
 }
 
 vminst(CLG) {
   clrf(FG);
-  vmbrk();
+  inext();
 }
 
 vminst(CLL) {
   clrf(FL);
-  vmbrk();
+  inext();
 }
 
 vminst(CLA) {
   clrf(FA);
-  vmbrk();
+  inext();
 }
 
 vminst(CLB) {
   clrf(FB);
-  vmbrk();
+  inext();
 }
 
 vminst(CLQ) {
   clrf(FQ);
-  vmbrk();
+  inext();
 }
 
 /* Complement flags */
 
 vminst(CMC) {
   cmlf(FC);
-  vmbrk();
+  inext();
 }
 
 vminst(CMO) {
   cmlf(FO);
-  vmbrk();
+  inext();
 }
 
 vminst(CMS) {
   cmlf(FS);
-  vmbrk();
+  inext();
 }
 
 vminst(CMZ) {
   cmlf(FZ);
-  vmbrk();
+  inext();
 }
 
 vminst(CME) {
   cmlf(FE);
-  vmbrk();
+  inext();
 }
 
 vminst(CMG) {
   cmlf(FG);
-  vmbrk();
+  inext();
 }
 
 vminst(CML) {
   cmlf(FL);
-  vmbrk();
+  inext();
 }
 
 vminst(CMA) {
   cmlf(FA);
-  vmbrk();
+  inext();
 }
 
 vminst(CMB) {
   cmlf(FB);
-  vmbrk();
+  inext();
 }
 
 vminst(CMQ) {
   cmlf(FQ);
-  vmbrk();
+  inext();
 }
 
 /* Branching and flow control. */
@@ -920,138 +927,138 @@ vminst(CMQ) {
 
 vminst(JMP) {
   br_abs();
-  vmbrk();
+  inext();
 }
 
 vminst(JMPN) {
   br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JE) {
   if (getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNE) {
   if (!getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JG) {
   if (getf(FG))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JGE) {
   if (getf(FG) || getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JL) {
   if (getf(FL))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JLE) {
   if (getf(FL) || getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JA) {
   if (getf(FA))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JAE) {
   if (getf(FA) || getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JB) {
   if (getf(FB))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JBE) {
   if (getf(FB) || getf(FQ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JC) {
   if (getf(FC))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNC) {
   if (!getf(FC))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JO) {
   if (getf(FO))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNO) {
   if (!getf(FO))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JS) {
   if (getf(FS))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNS) {
   if (!getf(FS))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JZ) {
   if (getf(FZ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNZ) {
   if (!getf(FZ))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JX) {
   if (getf(FE))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(JNX) {
   if (!getf(FE))
     br_rel();
-  vmbrk();
+  inext();
 }
 
 vminst(LOOP) {
   if (--reg[rA(i)] != 0)
     br_rel();
-  vmbrk();
+  inext();
 }
 
 #undef br_abs
@@ -1067,12 +1074,12 @@ vminst(LOOP) {
 
 vminst(CALL) {
   setup_call(im(i));
-  vmbrk();
+  inext();
 }
 
 vminst(CALLR) {
   setup_call(reg[rA(i)]);
-  vmbrk();
+  inext();
 }
 
 #undef setup_call
@@ -1083,7 +1090,7 @@ vminst(RET) {
   pc = lr;
   pop(bp);
   pop(lr);
-  vmbrk();
+  inext();
 }
 
 vminst(THR) {
@@ -1094,64 +1101,64 @@ vminst(THR) {
 vminst(SAVE) {
   for (int i = 0; i < 10; i++)
     push(reg[i]);
-  vmbrk();
+  inext();
 }
 
 vminst(RSTR) {
   #ifndef PERF_
   if (sp < bp || sp - bp < 10)
-    return S_STUND;
+    stop(S_STUND);
   #endif
   for (int i = 9; i >= 0; i--)
     pop(reg[i]);
-  vmbrk();
+  inext();
 }
 
 vminst(JR) {
   pc = reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(JRN) {
   pc += reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(SAL) {
   #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < im(i))
-    return S_STOVF;
+    stop(S_STOVF);
   #endif
   sp += im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(SALR) {
   #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < reg[rA(i)])
-    return S_STOVF;
+    stop(S_STOVF);
   #endif
   sp += reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
 vminst(SDL) {
   #ifndef PERF_
   if (sp < bp || sp - bp < im(i))
-    return S_STUND;
+    stop(S_STUND);
   #endif
   sp -= im(i);
-  vmbrk();
+  inext();
 }
 
 vminst(SDLR) {
   #ifndef PERF_
   if (sp < bp || sp - bp < reg[rA(i)])
-    return S_STUND;
+    stop(S_STUND);
   #endif
   sp -= reg[rA(i)];
-  vmbrk();
+  inext();
 }
 
-default: return S_ILL; }
+default: stop(S_ILL); }
 }
