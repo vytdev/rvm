@@ -64,7 +64,7 @@ void dump_regs(void) {
   preg("lr", RLR);
   preg("bp", RBP);
   preg("sp", RSP);
-  preg("pc", RPC);
+  preg("r14", R14);
   preg("fl", RFL);
   #undef preg
 }
@@ -171,7 +171,7 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
 }
 
 
-bool vth_init(uint32_t stlen, uint64_t start_pc) {
+bool vth_init(uint32_t stlen) {
   if (vmstate != V_RUNN)
     return false;
   /* Initialise the stack. */
@@ -184,7 +184,6 @@ bool vth_init(uint32_t stlen, uint64_t start_pc) {
   /* Initialise the registers. */
   for (int i = 0; i < 16; i++)
     reg[i] = 0;
-  reg[RPC] = start_pc;
   return true;
 }
 
@@ -274,14 +273,14 @@ void run_vm(int argc, char **argv) {
     ret_fail();
   }
   vmstate = V_RUNN;
-  if (!vth_init(default_stlen, main_pc)) {
+  if (!vth_init(default_stlen)) {
     rlog("Failed to initialize thread context.\n");
     ret_fail();
   }
   if (exec_mode == X_PRIV)
     rlog("warning: Running in privileged mode.\n");
   /* Run the vm. */
-  vmexec();
+  vmexec(main_pc);
   vth_free();
   free(bin);
   ret_succ();
@@ -309,14 +308,14 @@ static THREAD_FUNC(vm__threadHandler) {
   free(arg);
   arg = NULL;
   /* Initialise the thread stack and registers. */
-  if (opts.tid == 0 || !vth_init(opts.stlen, opts.start_pc)) {
+  if (opts.tid == 0 || !vth_init(opts.stlen)) {
     vmfmsg(S_ERR);
     rlog("Failed to initialize thread context.\n");
     fail();
   }
   tid = opts.tid;
   /* Run the interpreter. */
-  vmexec();
+  vmexec(opts.start_pc);
   vth_free();
   EXIT_THREAD(0);
   #undef fail

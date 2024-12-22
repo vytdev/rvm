@@ -5,27 +5,27 @@
 #include <stdlib.h>
 
 /* Prototype for the vm__interpreter() function. */
-static statcd vm__interpreter(void);
+static statcd vm__interpreter(uint64_t start_pc);
 
 /* Macro to fetch the next instruction. */
-#define fetch() (code[reg[RPC]++])
+#define fetch() (code[pc++])
 /* Macro to check if a const rel index is valid. */
 #ifdef PERF_
 #  define check_k(n)
 #else
 #  define check_k(n) do { \
-      if (reg[RPC] + (n) >= codelen) \
+      if (pc + (n) >= codelen) \
         return S_OOB;     \
     } while (0)
 #endif
 /* Macro to read a const. Must be preceded by check_k(). */
-#define gconst(n) (code[reg[RPC] + (n)])
+#define gconst(n) (code[pc + (n)])
 
 
-void vmexec(void) {
+void vmexec(uint64_t start_pc) {
   /* vmexec() is a wrapper to vm__interpreter(). */
   benchmark_init();
-  statcd s = vm__interpreter();
+  statcd s = vm__interpreter(start_pc);
   benchmark_tag();
 
   /* Interpreter complete. Do some additional state checks. */
@@ -42,12 +42,14 @@ void vmexec(void) {
 }
 
 
-static statcd vm__interpreter(void) {
+static statcd vm__interpreter(uint64_t start_pc) {
+  register uint64_t pc = start_pc;
+
   interp_start:
 
   /* Make sure we're still reading within the bytecode. */
   #ifndef PERF_
-  if (reg[RPC] >= codelen)
+  if (pc >= codelen)
     return S_ILL;
   #endif
 
@@ -912,8 +914,8 @@ vminst(CMQ) {
 
 /* Branching and flow control. */
 
-#define br_abs()  (reg[RPC]  = im(i))
-#define br_rel()  (reg[RPC] += im(i))
+#define br_abs()  (pc  = im(i))
+#define br_rel()  (pc += im(i))
 
 vminst(JMP) {
   br_abs();
@@ -1060,17 +1062,17 @@ vminst(LOOP) {
        s = vpush(reg[RBP]);  \
        if (s != S_OK)        \
          return s;           \
-       reg[RLR] = reg[RPC];  \
+       reg[RLR] = pc;        \
        reg[RBP] = reg[RSP];  \
-       reg[RPC] += (n);      \
+       pc += (n);            \
      } while (0)
 #else
 #  define setup_call(n) do { \
        vpush(reg[RLR]);      \
        vpush(reg[RBP]);      \
-       reg[RLR] = reg[RPC];  \
+       reg[RLR] = pc;        \
        reg[RBP] = reg[RSP];  \
-       reg[RPC] += (n);      \
+       pc += (n);            \
      } while (0)
 #endif
 
@@ -1089,7 +1091,7 @@ vminst(CALLR) {
 vminst(RET) {
   subroutine_ret:
   reg[RSP] = reg[RBP];
-  reg[RPC] = reg[RLR];
+  pc = reg[RLR];
   #ifndef PERF_
   statcd s;
   s = vpop(&reg[RBP]);
@@ -1135,12 +1137,12 @@ vminst(RSTR) {
 }
 
 vminst(JR) {
-  reg[RPC] = reg[rA(i)];
+  pc = reg[rA(i)];
   vmbrk();
 }
 
 vminst(JRN) {
-  reg[RPC] += reg[rA(i)];
+  pc += reg[rA(i)];
   vmbrk();
 }
 

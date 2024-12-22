@@ -119,7 +119,7 @@ typedef struct rvm_reloc {
 #define RLR 11 /* link register */
 #define RBP 12 /* base pointer */
 #define RSP 13 /* stack pointer */
-#define RPC 14 /* program counter */
+#define R14 14 /* <reserved> */
 #define RFL 15 /* flags register */
 
 /* Flags */

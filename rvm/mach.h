@@ -66,7 +66,7 @@ void dump_regs(void);
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc);
 
 /* Initialise thread ctx. The vm must be in running state to use this. */
-bool vth_init(uint32_t stlen, uint64_t start_pc);
+bool vth_init(uint32_t stlen);
 
 /* Free thread ctx. Not allowed in provisioning state. */
 bool vth_free(void);
@@ -82,7 +82,7 @@ void show_err(statcd s);
 void run_vm(int argc, char **argv);
 
 /* Interpret the bytecode for the current thread. [noreturn if error] */
-void vmexec(void);
+void vmexec(uint64_t start_pc);
 
 /* VM Call. */
 statcd vmcall(uint16_t ndx);
