@@ -1134,6 +1134,16 @@ vminst(RSTR) {
   vmbrk();
 }
 
+vminst(JR) {
+  reg[RPC] = reg[rA(i)];
+  vmbrk();
+}
+
+vminst(JRN) {
+  reg[RPC] += reg[rA(i)];
+  vmbrk();
+}
+
 #undef br_abs
 #undef br_rel
 default: return S_ILL; }

@@ -327,6 +327,8 @@ OP_RET,            /* [     ]   return to the caller */
 OP_THR,            /* [     ]   set FE, then return to the caller */
 OP_SAVE,           /* [     ]   save all the gpr (%r0 - %r9) */
 OP_RSTR,           /* [     ]   restore all the gpr (%r0 - %r9) */
+OP_JR,             /* [A    ]   unconditional (abs) jump to pc A */
+OP_JRN,            /* [A    ]   unconditional (rel) jump by offset A */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
 
