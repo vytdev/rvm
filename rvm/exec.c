@@ -11,13 +11,22 @@ static statcd vm__interpreter(uint64_t start_pc);
 #define fetch()   (code[pc++])
 #define vminst(n) case (OP_ ## n):
 #define inext()   goto interp_start
-#define stop(e) do { \
+/* Raise VM exception. */
+#define __rvm_stop(e) do { \
     last_pc = pc; \
     last_bp = bp; \
     last_sp = sp; \
     last_fl = fl; \
     return (e);   \
   } while (0)
+#ifdef BENCHMARK_
+#  define stop(e) do { \
+     benchmark_insts += icnt; \
+     __rvm_stop((e));  \
+   } while (0)
+#else
+#  define stop(e) __rvm_stop((e))
+#endif
 /* Replace the flag manipulation macros. */
 #ifdef setf
 #  undef setf
@@ -93,6 +102,9 @@ static statcd vm__interpreter(uint64_t start_pc) {
   register uint64_t bp = last_bp;
   register uint64_t sp = last_sp;
   register uint64_t fl = last_fl;
+  #ifdef BENCHMARK_
+  register uint64_t icnt = 0;
+  #endif
 
   interp_start:
 
@@ -103,7 +115,9 @@ static statcd vm__interpreter(uint64_t start_pc) {
   #endif
 
   /* For benchmarking. */
-  benchmark_incr();
+  #ifdef BENCHMARK_
+  icnt++;
+  #endif
 
   /* Fetch the next instruction. */
   uint64_t i = fetch();

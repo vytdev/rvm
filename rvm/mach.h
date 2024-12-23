@@ -97,7 +97,6 @@ extern TLOCAL u64 benchmark_epoch;
 extern TLOCAL u64 benchmark_break;
 extern TLOCAL u64 benchmark_insts;
 
-#define benchmark_incr() (benchmark_insts++)
 #define benchmark_init() (benchmark_epoch = read_mclock())
 #define benchmark_curr() (read_mclock() - benchmark_epoch)
 #define benchmark_tag()  (benchmark_break = benchmark_curr())
@@ -114,7 +113,6 @@ void dump_benchmark(void);
 #define benchmark_break 0
 #define benchmark_insts 0
 
-#define benchmark_incr() 0
 #define benchmark_init() 0
 #define benchmark_curr() 0
 #define benchmark_tag() 0
