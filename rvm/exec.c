@@ -89,6 +89,11 @@ static statcd vm__interpreter(uint64_t start_pc) {
   /* Fetch the next instruction. */
   uint64_t i = fetch();
 
+  /* Keeps the branch predictor busy by often hitting the false
+     branch. This might boost the opcode dispatch speed. */
+  if (op(i) == 0)
+    inext();
+
 /* Macros for opcode implementation. */
 switch ((opcode)op(i)) {
 
