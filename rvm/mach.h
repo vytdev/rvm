@@ -24,6 +24,7 @@ extern TLOCAL uint32_t stack_len;
 extern TLOCAL uint64_t last_pc;
 extern TLOCAL uint64_t last_sp;
 extern TLOCAL uint64_t last_bp;
+extern TLOCAL uint64_t last_fl;
 
 /* VM states */
 extern char vmstate;
@@ -53,10 +54,10 @@ typedef int statcd;
   (rlog("vm fault [%d]: %s\n", (s), statcd_msg((s))))
 
 /* Flag manipulation */
-#define setf(f) (reg[RFL] |= (f))
-#define cmlf(f) (reg[RFL] ^= (f))
-#define clrf(f) (reg[RFL] &= ~(uint64_t)(f))
-#define getf(f) (reg[RFL] & (f))
+#define setf(f) (last_fl |= (f))
+#define cmlf(f) (last_fl ^= (f))
+#define clrf(f) (last_fl &= ~(uint64_t)(f))
+#define getf(f) (last_fl & (f))
 
 
 /* Return stat code strings. */

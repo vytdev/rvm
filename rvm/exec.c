@@ -15,8 +15,26 @@ static statcd vm__interpreter(uint64_t start_pc);
     last_pc = pc; \
     last_bp = bp; \
     last_sp = sp; \
+    last_fl = fl; \
     return (e);   \
   } while (0)
+/* Replace the flag manipulation macros. */
+#ifdef setf
+#  undef setf
+#endif
+#define setf(f) (fl |= (f))
+#ifdef cmlf
+#  undef cmlf
+#endif
+#define cmlf(f) (fl ^= (f))
+#ifdef clrf
+#  undef clrf
+#endif
+#define clrf(f) (fl &= ~(uint64_t)(f))
+#ifdef getf
+#  undef getf
+#endif
+#define getf(f) (fl & (f))
 /* Macro to push into stack. */
 #ifdef PERF_
 #  define push(v) (stack[sp++] = (v))
@@ -74,6 +92,7 @@ static statcd vm__interpreter(uint64_t start_pc) {
   register uint64_t pc = start_pc;
   register uint64_t bp = last_bp;
   register uint64_t sp = last_sp;
+  register uint64_t fl = last_fl;
 
   interp_start:
 
@@ -684,7 +703,7 @@ vminst(BTCG) {
 #define sbit(x) ((x)>>63)
 #define do_cmp(x,y) do { \
     u64 r = (x) - (y);   \
-    reg[RFL] = 0;        \
+    fl = 0;              \
     if ((x) < (y))       \
       setf(FC);          \
     if (sbit(x) != sbit(y) && sbit(r) == sbit(y)) \
@@ -738,7 +757,7 @@ vminst(CMPKR) {
 #undef do_cmp
 #define do_test(x,y) do { \
     u64 r = (x) & (y);    \
-    reg[RFL] = 0;         \
+    fl = 0;               \
     if (sbit(r))          \
       setf(FS);           \
     if (r == 0)           \
@@ -1158,6 +1177,11 @@ vminst(SDLR) {
     stop(S_STUND);
   #endif
   sp -= reg[rA(i)];
+  inext();
+}
+
+vminst(CFL) {
+  fl = 0;
   inext();
 }
 

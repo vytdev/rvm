@@ -120,7 +120,7 @@ typedef struct rvm_reloc {
 #define R12 12 /* <reserved> */
 #define R13 13 /* <reserved> */
 #define R14 14 /* <reserved> */
-#define RFL 15 /* flags register */
+#define R15 15 /* <reserved> */
 
 /* Flags */
 #define FC  (1<<0) /* carry flag */
@@ -325,6 +325,7 @@ OP_SAL,            /* [    M]   allocate M items on stack */
 OP_SALR,           /* [A    ]   allocate A items on stack */
 OP_SDL,            /* [    M]   deallocate M items from stack */
 OP_SDLR,           /* [A    ]   deallocate A items from stack */
+OP_CFL,            /* [     ]   clear the flags internal register */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
 

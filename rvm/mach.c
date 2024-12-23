@@ -32,6 +32,7 @@ TLOCAL uint32_t stack_len = 0;
 TLOCAL uint64_t last_pc   = 0;
 TLOCAL uint64_t last_sp   = 0;
 TLOCAL uint64_t last_bp   = 0;
+TLOCAL uint64_t last_fl   = 0;
 
 
 const char *statcd_msg(statcd n) {
@@ -68,7 +69,7 @@ void dump_regs(void) {
   preg("r12", R12);
   preg("r13", R13);
   preg("r14", R14);
-  preg("fl ", RFL);
+  preg("r15", R15);
   #undef preg
 }
 
@@ -210,7 +211,18 @@ void show_err(statcd s) {
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
   fprintf(stderr, "  stack used:  %"V64S"u B\n", last_sp * 8);
   fprintf(stderr, "  stack size:  %"V64S"u B\n", (u64)stack_len * 8);
-  fprintf(stderr, "  flags reg:  ");
+  /* Dump the contents of all registers. */
+  fprintf(stderr, "  (program registers)\n");
+  dump_regs();
+  /* Dump the internal states. */
+  #define print_state(name, st) \
+    fprintf(stderr, "  " name "  0x%016"V64S"x  %"V64S"u\n", (st), (st))
+  fprintf(stderr, "  (interpreter state)\n");
+  print_state("prog cntr:", last_pc);
+  print_state("stack ptr:", last_sp);
+  print_state("frame ptr:", last_bp);
+  #undef print_state
+  fprintf(stderr, "  flags reg: ");
   /* Print the contents of the %fl register. */
   #define print_if_set(f, txt) \
     (getf(f) ? fprintf(stderr, (" " txt)) : 0)
@@ -225,18 +237,9 @@ void show_err(statcd s) {
   print_if_set(FB, "BF");
   print_if_set(FQ, "QF");
   #undef print_if_set
+  if (last_fl == 0)
+    fprintf(stderr, " NOFLAG");
   putc('\n', stderr); /* line-feed for the "flags reg" line */
-  /* Dump the contents of all registers. */
-  fprintf(stderr, "  (program registers)\n");
-  dump_regs();
-  /* Dump the internal states. */
-  #define print_state(name, st) \
-    fprintf(stderr, "  " name "  0x%016"V64S"x  %"V64S"u\n", (st), (st))
-  fprintf(stderr, "  (interpreter state)\n");
-  print_state("prog cntr:", last_pc);
-  print_state("stack ptr:", last_sp);
-  print_state("frame ptr:", last_bp);
-  #undef print_state
 }
 
 
