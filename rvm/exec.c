@@ -73,9 +73,9 @@ void vmexec(uint64_t start_pc) {
 
 static statcd vm__interpreter(uint64_t start_pc) {
   register uint64_t pc = start_pc;
-  register uint64_t bp = 0;
-  register uint64_t sp = 0;
-  register uint64_t lr = 0;
+  register uint64_t bp = last_bp;
+  register uint64_t sp = last_sp;
+  register uint64_t lr = last_lr;
 
   interp_start:
 
