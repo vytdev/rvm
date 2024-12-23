@@ -15,7 +15,6 @@ static statcd vm__interpreter(uint64_t start_pc);
     last_pc = pc; \
     last_bp = bp; \
     last_sp = sp; \
-    last_lr = lr; \
     return (e);   \
   } while (0)
 /* Macro to push into stack. */
@@ -75,7 +74,6 @@ static statcd vm__interpreter(uint64_t start_pc) {
   register uint64_t pc = start_pc;
   register uint64_t bp = last_bp;
   register uint64_t sp = last_sp;
-  register uint64_t lr = last_lr;
 
   interp_start:
 
@@ -1065,11 +1063,10 @@ vminst(LOOP) {
 #undef br_rel
 
 #define setup_call(n) do { \
-     push(lr);     \
+     push(pc);     \
      push(bp);     \
-     lr = pc;      \
-     bp = sp;      \
      pc += (n);    \
+     bp = sp;      \
    } while (0)
 
 vminst(CALL) {
@@ -1087,9 +1084,8 @@ vminst(CALLR) {
 vminst(RET) {
   subroutine_ret:
   sp = bp;
-  pc = lr;
   pop(bp);
-  pop(lr);
+  pop(pc);
   inext();
 }
 

@@ -142,7 +142,7 @@ typedef struct rvm_reloc {
  *   ...
  *   ##      <- arg2
  *   ##      <- arg1
- *   ##      <- saved caller's %lr (internal)
+ *   ##      <- saved caller's %pc (internal)
  *   ##      <- saved caller's %bp (internal)
  *   ##      <- callee's base pointer
  *   ...
@@ -156,14 +156,6 @@ typedef struct rvm_reloc {
  *    to a subroutine.
  *  + arg(d) = %bp - 3 - d
  *  + var(d) = %bp + d
- *
- * Allocating local vars:
- *      add %sp, %sp, #n
- *      ; n is the var count
- *
- * Deallocating local vars:
- *      sub %sp, %sp, #n
- *      ; n is the var count
  */
 
 /* Instruction set */

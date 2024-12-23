@@ -32,7 +32,6 @@ TLOCAL uint32_t stack_len = 0;
 TLOCAL uint64_t last_pc   = 0;
 TLOCAL uint64_t last_sp   = 0;
 TLOCAL uint64_t last_bp   = 0;
-TLOCAL uint64_t last_lr   = 0;
 
 
 const char *statcd_msg(statcd n) {
@@ -237,7 +236,6 @@ void show_err(statcd s) {
   print_state("prog cntr:", last_pc);
   print_state("stack ptr:", last_sp);
   print_state("frame ptr:", last_bp);
-  print_state("link reg: ", last_lr);
   #undef print_state
 }
 
