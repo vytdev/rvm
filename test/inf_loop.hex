@@ -5,16 +5,15 @@
 00                         # type (RHT_LOADABLE)
 00                         # flags
 00 00 00 00 00 00 00 00    # entryp
-58 00 00 00 00 00 00 00    # shoff
+50 00 00 00 00 00 00 00    # shoff
 01 00 00 00 00 00 00 00    # shnum
-50 00 00 00 00 00 00 00    # stroff
+48 00 00 00 00 00 00 00    # stroff
 00 00 00 00 00 00 00 00    # (padding)
 00 00 00 00 00 00 00 00    # (padding)
 00 00 00 00 00 00 00 00    # (padding)
 
 # .code section:
 7d 00 00 ff ff ff ff ff    # _start: jmp _start
-01 00 00 00 00 00 00 00    # ivc #0
 
 # strtab:
 00 2e 63 6f 64 65 00 00    # .code
@@ -23,5 +22,5 @@
 01 00 00 00                # name
 00 00 00 00                # (padding)
 40 00 00 00 00 00 00 00    # offset
-10 00 00 00 00 00 00 00    # size
-02 00 00 00 00 00 00 00    # entcnt
+08 00 00 00 00 00 00 00    # size
+01 00 00 00 00 00 00 00    # entcnt

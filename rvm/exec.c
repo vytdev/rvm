@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 /* Prototype for the vm__interpreter() function. */
-static statcd vm__interpreter(uint64_t start_pc);
+static excp vm__interpreter(uint64_t start_pc);
 
 /* Some interpreter macros. */
 #define fetch()   (code[pc++])
@@ -50,7 +50,7 @@ static statcd vm__interpreter(uint64_t start_pc);
 #else
 #  define push(v) do {     \
       if (sp >= stack_len) \
-        stop(S_STOVF);     \
+        stop(E_STOVF);     \
       stack[sp++] = (v);   \
     } while (0)
 #endif
@@ -60,7 +60,7 @@ static statcd vm__interpreter(uint64_t start_pc);
 #else
 #  define pop(v) do {     \
       if (sp == 0)        \
-        stop(S_STUND);    \
+        stop(E_STUND);    \
       (v) = stack[--sp];  \
     } while (0)
 #endif
@@ -70,7 +70,7 @@ static statcd vm__interpreter(uint64_t start_pc);
 #else
 #  define check_k(n) do { \
       if (pc + (n) >= codelen) \
-        stop(S_OOB);     \
+        stop(E_OOB);     \
     } while (0)
 #endif
 /* Macro to read a const. Must be preceded by check_k(). */
@@ -78,26 +78,38 @@ static statcd vm__interpreter(uint64_t start_pc);
 
 
 void vmexec(uint64_t start_pc) {
-  /* vmexec() is a wrapper to vm__interpreter(). */
+  last_pc = start_pc;
+  excp e = E_OK;
+
   benchmark_init();
-  statcd s = vm__interpreter(start_pc);
+  while (1) {
+    if (e == E_OK) {
+      e = vm__interpreter(last_pc);
+      continue;
+    }
+    if (e == E_VMCALL) {
+      e = vmcall();
+      continue;
+    }
+    break;
+  }
   benchmark_tag();
 
   /* Interpreter complete. Do some additional state checks. */
-  if (s != S_OK)
-    show_err(s);
+  if (e != E_OK)
+    show_err(e);
 
   if (tid == 0) /* Only dump benchmarks from the main thread. */
     dump_benchmark();
 
-  if (s != S_OK) {
+  if (e != E_OK) {
     rlog("Error is unrecoverable. Aborting...\n");
     exit(-1);
   }
 }
 
 
-static statcd vm__interpreter(uint64_t start_pc) {
+static excp vm__interpreter(uint64_t start_pc) {
   register uint64_t pc = start_pc;
   register uint64_t bp = last_bp;
   register uint64_t sp = last_sp;
@@ -111,7 +123,7 @@ static statcd vm__interpreter(uint64_t start_pc) {
   /* Make sure we're still reading within the bytecode. */
   #ifndef PERF_
   if (pc >= codelen)
-    stop(S_ILL);
+    stop(E_ILL);
   #endif
 
   /* For benchmarking. */
@@ -136,15 +148,12 @@ vminst(NOP) {
   inext();
 }
 
-vminst(IVC) {
-  statcd s = vmcall(im(i) & 0xffff);
-  if (s != S_OK)
-    stop(s);
-  inext();
+vminst(TRAP) {
+  stop(im(i) & 0xffff);
 }
 
 vminst(HLT) {
-  stop(S_TERM);
+  stop(E_TERM);
 }
 
 /* Data manipulation. */
@@ -169,7 +178,7 @@ vminst(LOD) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= datalen)
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   reg[rA(i)] = data[idx];
   inext();
@@ -179,7 +188,7 @@ vminst(LODS) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   reg[rA(i)] = stack[bp + idx];
   inext();
@@ -189,7 +198,7 @@ vminst(LODA) {
   u64 idx = bp - 3 - im(i);
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   reg[rA(i)] = stack[idx];
   inext();
@@ -199,7 +208,7 @@ vminst(LODAR) {
   u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   reg[rA(i)] = stack[idx];
   inext();
@@ -209,7 +218,7 @@ vminst(STR) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= datalen)
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   data[idx] = reg[rA(i)];
   inext();
@@ -219,7 +228,7 @@ vminst(STRS) {
   u64 idx = im(i);
   #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   stack[bp + idx] = reg[rA(i)];
   inext();
@@ -229,7 +238,7 @@ vminst(STRA) {
   u64 idx = bp - 3 - im(i);
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   stack[idx] = reg[rA(i)];
   inext();
@@ -239,7 +248,7 @@ vminst(STRAR) {
   u64 idx = bp - 3 - reg[rB(i)];
   #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
-    stop(S_OOB);
+    stop(E_OOB);
   #endif
   stack[idx] = reg[rA(i)];
   inext();
@@ -271,7 +280,7 @@ vminst(PUSHK) {
 vminst(POP) {
   #ifndef PERF_
   if (sp <= bp)
-    stop(S_STUND);
+    stop(E_STUND);
   #endif
   pop(reg[rA(i)]);
   inext();
@@ -1141,7 +1150,7 @@ vminst(SAVE) {
 vminst(RSTR) {
   #ifndef PERF_
   if (sp < bp || sp - bp < 16)
-    stop(S_STUND);
+    stop(E_STUND);
   #endif
   for (int i = 16 - 1; i >= 0; i--)
     pop(reg[i]);
@@ -1161,7 +1170,7 @@ vminst(JRN) {
 vminst(SAL) {
   #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < im(i))
-    stop(S_STOVF);
+    stop(E_STOVF);
   #endif
   sp += im(i);
   inext();
@@ -1170,7 +1179,7 @@ vminst(SAL) {
 vminst(SALR) {
   #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < reg[rA(i)])
-    stop(S_STOVF);
+    stop(E_STOVF);
   #endif
   sp += reg[rA(i)];
   inext();
@@ -1179,7 +1188,7 @@ vminst(SALR) {
 vminst(SDL) {
   #ifndef PERF_
   if (sp < bp || sp - bp < im(i))
-    stop(S_STUND);
+    stop(E_STUND);
   #endif
   sp -= im(i);
   inext();
@@ -1188,7 +1197,7 @@ vminst(SDL) {
 vminst(SDLR) {
   #ifndef PERF_
   if (sp < bp || sp - bp < reg[rA(i)])
-    stop(S_STUND);
+    stop(E_STUND);
   #endif
   sp -= reg[rA(i)];
   inext();
@@ -1199,5 +1208,5 @@ vminst(CFL) {
   inext();
 }
 
-default: stop(S_ILL); }
+default: stop(E_ILL); }
 }

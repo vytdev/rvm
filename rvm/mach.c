@@ -35,18 +35,19 @@ TLOCAL uint64_t last_bp   = 0;
 TLOCAL uint64_t last_fl   = 0;
 
 
-const char *statcd_msg(statcd n) {
-  switch (n) {
-    case S_OK:      return "Ok";
-    case S_ERR:     return "Internal error";
-    case S_PERM:    return "Permission denied";
-    case S_ILL:     return "Illegal instruction";
-    case S_INVC:    return "Invalid VM call";
-    case S_STOVF:   return "Stack overflow";
-    case S_STUND:   return "Stack underflow";
-    case S_OOB:     return "Out of bounds access";
-    case S_TERM:    return "Terminated";
-    default:        return "Unknown status";
+const char *excp_msg(excp e) {
+  switch (e) {
+    case E_OK:      return "Ok";
+    case E_ERR:     return "Internal error";
+    case E_TERM:    return "Terminated";
+    case E_VMCALL:  return "Invoke VM call";
+    case E_PERM:    return "Permission denied";
+    case E_ILL:     return "Illegal instruction";
+    case E_INVC:    return "Invalid VM call";
+    case E_STOVF:   return "Stack overflow";
+    case E_STUND:   return "Stack underflow";
+    case E_OOB:     return "Out of bounds access";
+    default:        return "Unknown exception";
   }
 }
 
@@ -205,7 +206,7 @@ bool vth_free(void) {
 }
 
 
-void show_err(statcd s) {
+void show_err(excp s) {
   vmfmsg(s);
   /* Some useful stats. */
   fprintf(stderr, "  abi version: v%u\n", RVM_VER);
@@ -291,7 +292,7 @@ static THREAD_FUNC(vm__threadHandler) {
   #define fail() exit(-1)
   /* Get the thread options structure. */
   if (!arg) {
-    vmfmsg(S_ERR);
+    vmfmsg(E_ERR);
     rlog("Thread initialization failed.\n");
     fail();
   }
@@ -300,7 +301,7 @@ static THREAD_FUNC(vm__threadHandler) {
   arg = NULL;
   /* Initialise the thread stack and registers. */
   if (opts.tid == 0 || !vth_init(opts.stlen)) {
-    vmfmsg(S_ERR);
+    vmfmsg(E_ERR);
     rlog("Failed to initialize thread context.\n");
     fail();
   }

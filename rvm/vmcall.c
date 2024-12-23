@@ -7,11 +7,11 @@
    authority to execute the vm call. */
 #define check_perm(d) do { \
     if (!has_perm((d)))    \
-      return S_PERM;       \
+      return E_PERM;       \
   } while (0)
 
-statcd vmcall(uint16_t ndx) {
-switch (ndx) {
+excp vmcall(void) {
+switch (reg[R0] & 0xffff) {
 #define defcall(n) case (n):
 
 
@@ -25,9 +25,9 @@ defcall(VM_EXIT) {
      has no recovery mechs). As such, relying solely on VM_EXIT
      without proper user-managed resource cleanup might not
      always be safe for the user. */
-  exit(reg[R0]);
+  exit(reg[R1]);
 }
 
 
-default: return S_INVC; }
+default: return E_INVC; }
 }

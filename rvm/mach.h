@@ -39,29 +39,18 @@ extern char exec_mode;
 #define X_GUEST 2 /* Guest mode */
 #define has_perm(lvl) (exec_mode <= (lvl))
 
-/* Status codes */
-typedef int statcd;
-#define S_OK      0 /* Ok */
-#define S_ERR     1 /* Internal error */
-#define S_PERM    2 /* Permission denied */
-#define S_ILL     3 /* Illegal instruction */
-#define S_INVC    4 /* Invalid VM call */
-#define S_STOVF   5 /* Stack overflow */
-#define S_STUND   6 /* Stack underflow */
-#define S_OOB     7 /* Out of bounds access */
-#define S_TERM    8 /* Terminated */
-#define vmfmsg(s) \
-  (rlog("vm fault [%d]: %s\n", (s), statcd_msg((s))))
-
 /* Flag manipulation */
 #define setf(f) (last_fl |= (f))
 #define cmlf(f) (last_fl ^= (f))
 #define clrf(f) (last_fl &= ~(uint64_t)(f))
 #define getf(f) (last_fl & (f))
 
+#define vmfmsg(s) \
+  (rlog("vm fault [%d]: %s\n", (s), excp_msg((s))))
 
-/* Return stat code strings. */
-const char *statcd_msg(statcd n);
+
+/* Return exception code strings. */
+const char *excp_msg(excp e);
 
 /* Dump the caller thread's registers into stderr. */
 void dump_regs(void);
@@ -76,7 +65,7 @@ bool vth_init(uint32_t stlen);
 bool vth_free(void);
 
 /* Print the caller thread's stats as a runtime error. */
-void show_err(statcd s);
+void show_err(excp e);
 
 /* Load and run a bytecode image. [noreturn] */
 void run_vm(int argc, char **argv);
@@ -85,7 +74,7 @@ void run_vm(int argc, char **argv);
 void vmexec(uint64_t start_pc);
 
 /* VM Call. */
-statcd vmcall(uint16_t ndx);
+excp vmcall(void);
 
 
 #ifdef BENCHMARK_

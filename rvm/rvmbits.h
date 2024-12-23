@@ -161,7 +161,7 @@ typedef struct rvm_reloc {
 /* Instruction set */
 typedef enum {
 OP_NOP = 0,        /* no-op */
-OP_IVC,            /* [    M]   invoke vm call */
+OP_TRAP,           /* [    M]   trigger an exception */
 OP_HLT,            /* [     ]   terminates the vm */
 /* Data manipulation */
 OP_MOV,            /* [AB   ]   copy reg B to reg A */
@@ -328,6 +328,20 @@ OP_SDLR,           /* [A    ]   deallocate A items from stack */
 OP_CFL,            /* [     ]   clear the flags internal register */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
+
+/* VM Exceptions. */
+typedef enum {
+E_OK = 0,          /* Ok */
+E_ERR,             /* Internal error */
+E_TERM,            /* Terminated */
+E_VMCALL,          /* Invoke VM call */
+E_PERM,            /* Permission denied */
+E_ILL,             /* Illegal instruction */
+E_INVC,            /* Invalid VM call */
+E_STOVF,           /* Stack overflow */
+E_STUND,           /* Stack underflow */
+E_OOB,             /* Out of bounds access */
+} excp;
 
 /* VM calls (vmcalls use R0-R9 as their argument) */
 enum {
