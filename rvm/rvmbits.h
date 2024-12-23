@@ -115,12 +115,12 @@ typedef struct rvm_reloc {
 #define R7  7
 #define R8  8
 #define R9  9
-#define RRV 10 /* return value */
-#define R11 11 /* <reserved> */
-#define R12 12 /* <reserved> */
-#define R13 13 /* <reserved> */
-#define R14 14 /* <reserved> */
-#define R15 15 /* <reserved> */
+#define R10 10
+#define R11 11
+#define R12 12
+#define R13 13
+#define R14 14
+#define R15 15
 
 /* Flags */
 #define FC  (1<<0) /* carry flag */
@@ -317,8 +317,8 @@ OP_CALL,           /* [    M]   call a subroutine */
 OP_CALLR,          /* [A    ]   setup a new frame and set reg A to %pc */
 OP_RET,            /* [     ]   return to the caller */
 OP_THR,            /* [     ]   set FE, then return to the caller */
-OP_SAVE,           /* [     ]   save all the gpr (%r0 - %r9) */
-OP_RSTR,           /* [     ]   restore all the gpr (%r0 - %r9) */
+OP_SAVE,           /* [     ]   save all the gpr (%r0 - %r15) */
+OP_RSTR,           /* [     ]   restore all the gpr (%r0 - %r15) */
 OP_JR,             /* [A    ]   unconditional (abs) jump to pc A */
 OP_JRN,            /* [A    ]   unconditional (rel) jump by offset A */
 OP_SAL,            /* [    M]   allocate M items on stack */

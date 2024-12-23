@@ -64,7 +64,7 @@ void dump_regs(void) {
   preg("r7 ", R7);
   preg("r8 ", R8);
   preg("r9 ", R9);
-  preg("rv ", RRV);
+  preg("r10", R10);
   preg("r11", R11);
   preg("r12", R12);
   preg("r13", R13);

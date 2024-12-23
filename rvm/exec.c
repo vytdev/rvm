@@ -1119,17 +1119,17 @@ vminst(THR) {
 }
 
 vminst(SAVE) {
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 16; i++)
     push(reg[i]);
   inext();
 }
 
 vminst(RSTR) {
   #ifndef PERF_
-  if (sp < bp || sp - bp < 10)
+  if (sp < bp || sp - bp < 16)
     stop(S_STUND);
   #endif
-  for (int i = 9; i >= 0; i--)
+  for (int i = 16 - 1; i >= 0; i--)
     pop(reg[i]);
   inext();
 }
