@@ -1,0 +1,111 @@
+
+  rvm design architecture
+  Last updated: 24 Dec 2024 at 01:17 pm GMT
+  For ABI version: v1
+
+
+I. General detail
+
+  addressable registers:  16 (per encoding)
+  internal registers:     %pc, %bp, %sp, %fl
+
+  - %pc is the program counter. Every instruction
+    increments %pc by 1. %pc is always set to the offset
+    of the next instruction.
+  - %bp is the base pointer. It is an offset to the
+    start of the current routine frame in the stack.
+  - %sp is the stack pointer. It points to the top of
+    the stack.
+  - %fl is the flag register. It contains flags used
+    as the program runs.
+
+  Behaviours:
+
+  - Deallocating from the stack is not allowed if
+    (%sp - %bp < size).
+  - You cannot access args outside the caller's routine
+    frame.
+  - You cannot access local frame offsets if (%sp - %bp <=
+    idx). You need to allocate first (sal #<size>).
+
+
+II. Exception system
+
+  Program errors or requests are called "exceptions".
+  Exceptions can be intentionally triggered using the
+  'trap' instruction.
+
+    0000  E_OK               Ok
+    0001  E_ERR              Internal error
+    0002  E_TERM             Terminated
+    0003  E_VMCALL           Invoke VM call
+    0004  E_PERM             Permission denied
+    0005  E_ILL              Illegal instruction
+    0006  E_INVC             Invalid VM call
+    0007  E_STOVF            Stack overflow
+    0008  E_STUND            Stack underflow
+    0009  E_OOB              Out of bounds access
+
+
+III. Instruction sets
+
+  RAI   Redstone Abstract Interface -- The standard
+        instruction set. (%r0 -> %r15) [WIP]
+
+  SMI   Stack-Machine Interface -- Instructions to mimic
+        a stack machine. [TODO]
+
+  FPX   Floating-Point Extension -- Adds support to
+        floating-point operations. (%f0 -> %f15) [TODO]
+
+  WVE   Wide Vector Extension -- Adds support to 1024-bit
+        registers and operations. (%w0 -> %w15) [TODO]
+
+  FOE   Fused Operation Extension -- Combines common RAI
+        instructions into a single super-instruction. [TODO]
+
+
+IV. VM calls
+
+  VM calls provides a way to execute special operations.
+  To make a VM call, set %r0 with the call code. %r1 to
+  %r15 may be used for parameters. Registers aren't
+  changed after a VM call, except %r0. which contains the
+  result of the VM call.
+
+    0000 [p2]  void exit(uint8_t exitcode)         [noret]
+
+  VM calls uses a security feature called the "privilege
+  rings" (essentially, execution modes). There are 3
+  rings:
+
+    0x0  X_PRIV  (-p0)   Provides access to VM states.
+    0x1  X_USER  (-p1)   Access to basic I/O, fs, net, etc.
+    0x2  X_GUEST (-p2)   Completely isolated from the OS.
+
+  To invoke a VM call,
+
+    mov %r0, #0    ; vmcall code for exit()
+    mov %r1, #-1   ; exitcode, equivalent to 255
+    trap #0x3      ; exception to trigger a vmcall
+
+
+V. Instruction Encoding
+
+  * fixed 64-bits per inst
+
+    opcode      12 b   i & 0xfff
+    reg A        4 b   (i >> 12) & 0xf
+    reg B        4 b   (i >> 16) & 0xf
+    reg C        4 b   (i >> 20) & 0xf
+    immediate   40 b   (i >> 24)
+
+  Encoding:
+
+    inst(op,a,b,c,m) = (
+        (op & 0xfff)      |  # opcode
+        ((a & 0xf) << 12) |  # 
+        ((b & 0xf) << 16) |
+        ((c & 0xf) << 20) |
+        ((m      ) << 24)
+      )

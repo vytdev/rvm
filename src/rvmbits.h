@@ -343,7 +343,7 @@ E_STUND,           /* Stack underflow */
 E_OOB,             /* Out of bounds access */
 } excp;
 
-/* VM calls (vmcalls use R0-R9 as their argument) */
+/* VM calls (vmcalls use R1-R15 as their argument) */
 enum {
 VM_EXIT = 0,       /* (1) exit */
 };
