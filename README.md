@@ -1,6 +1,21 @@
 # rvm
 
-Yet another language VM.
+The Redstone Abstract Virtual Machine. RVM is and aims to be:
+
+- Highly performant;
+- Very secure;
+- Flexible;
+- Feature rich;
+- Portable; and
+- Simple but extensible.
+
+> [!IMPORTANT]
+> RVM is still in its early stages of development.
+
+For more info, you can checkout the [docs folder](docs/).
+
+
+## License
 
 Copyright &copy; 2024 Vincent Yanzee J. Tan.
 
