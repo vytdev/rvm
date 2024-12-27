@@ -2,13 +2,15 @@
 #
 
 CC=      gcc
+RM=      rm -f
+
 CFLAGS=  -std=gnu99
 LDFLAGS= -lm
 
-CFLAGS+=  $(MYCFLAGS)
-LDFLAGS+= $(MYLDFLAGS)
+CFLAGS+=  $(ICFLAGS) $(MYCFLAGS)
+LDFLAGS+= $(ILDFLAGS) $(MYLDFLAGS)
 
-OBJ= bcode.o exec.o mach.o main.o util.o vmcall.o
+OBJ= main.o $(obj-core)
 TRG= rvm
 
 #
@@ -16,7 +18,7 @@ TRG= rvm
 #
 
 ifneq ($(B),)
-  CFLAGS+= -DBENCHMARK_
+  ICFLAGS+= -DBENCHMARK_
 endif
 
 #
@@ -26,6 +28,7 @@ endif
 all: release
 build: $(TRG)
 
+include List.mk
 -include .depend
 
 $(TRG): $(OBJ)
@@ -44,7 +47,7 @@ depend:
 	$(CC) -MM $(shell find . -name '*.c' -type f) > .depend
 
 clean:
-	rm -f $(TRG) $(OBJ) .depend
+	$(RM) $(TRG) $(OBJ) .depend
 
 #
 # Build configs.
@@ -52,16 +55,16 @@ clean:
 
 PHONY += debug release perf
 
-debug: CFLAGS+=  -g -DDEBUG_
-debug: LDFLAGS+= -g
+debug: ICFLAGS+=  -g -DDEBUG_
+debug: ILDFLAGS+= -g
 debug: build
 
-release: CFLAGS+=  -flto -O3 -march=native -mtune=native \
+release: ICFLAGS+=  -flto -O3 -march=native -mtune=native \
 	-fomit-frame-pointer -funroll-loops -ftree-vectorize
-release: LDFLAGS+= -flto -O3
+release: ILDFLAGS+= -flto -O3
 release: build
 
-perf: CFLAGS+= -DPERF_
+perf: ICFLAGS+= -DPERF_
 perf: release
 
 #
