@@ -1,2 +1,4 @@
 # Compiled test files.
 *.bin
+*.o
+test_exec
