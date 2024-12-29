@@ -97,7 +97,7 @@ void show_help(char const *prog) {
       "options:\n"
       "  -h    Show this help and exit.\n"
       "  -l    Show the registry list.\n"
-      "  -v    Be verbose on testing.\n"
+      "  -v    Enable test logging.\n"
       "  -f    Fail immediately.\n"
       "  -n    Don't log progress names.\n"
       "  -c    Don't colorise the output.\n"

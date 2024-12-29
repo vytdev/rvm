@@ -38,17 +38,13 @@ void test__run(struct test_entry *st) {
   test__has_failed = 0;
 
   /* Setup and run the test. */
-  if (!test__opts_no_timer) {
-    test__vlog("Starting timer...\n");
+  if (!test__opts_no_timer)
     test__timer_start();
-  }
 
   st->func();
 
-  if (!test__opts_no_timer) {
+  if (!test__opts_no_timer)
     elapsed = test__timer_mark();
-    test__vlog("Stopping timer...\n");
-  }
 
   test__total_ran++;
   if (!test__has_failed)
@@ -71,39 +67,39 @@ void test__run(struct test_entry *st) {
 
 static void print_name(char const *name) {
   if (test__opts_no_color) {
-    fprintf(stderr, "%s", name);
+    printf("%s", name);
     return;
   }
   /* Print colored name. */
-  fprintf(stderr, "\033[2m");
+  printf("\033[2m");
   while (*name != ':') {
-    fputc(*name, stderr);
+    fputc(*name, stdout);
     name++;
   }
-  fputc(':', stderr);
+  fputc(':', stdout);
   name++;
-  fprintf(stderr, "\033[0m%s", name);
+  printf("\033[0m%s", name);
 }
 
 
 void test__print_stat(char const *name, int stat, uint64_t elapsed_ns) {
-  fprintf(stderr, stat
+  printf(stat
     ? (test__opts_no_color ? "FAIL" : "\033[41mFAIL\033[0m")
     : (test__opts_no_color ? "PASS" : "\033[42mPASS\033[0m"));
 
   /* Print name. */
-  fputc(' ', stderr);
+  fputc(' ', stdout);
   print_name(name);
 
   /* Print the elapsed time. */
   if (!test__opts_no_timer) {
-    fputc(' ', stderr);
+    fputc(' ', stdout);
     if (!test__opts_no_color)
-      fprintf(stderr, "\033[2m");
-    fprintf(stderr, "(%u ms)", (uint32_t)elapsed_ns / MILLION);
+      printf("\033[2m");
+    printf("(%u ms)", (uint32_t)elapsed_ns / MILLION);
     if (!test__opts_no_color)
-      fprintf(stderr, "\033[0m");
+      printf("\033[0m");
   }
 
-  fputc('\n', stderr);
+  fputc('\n', stdout);
 }

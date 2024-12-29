@@ -14,14 +14,14 @@ uint64_t test__timer    = 0;
 int test__has_failed    = 0;
 
 void test__exit(void) {
-  fputc('\n', stderr);
-  fprintf(stderr, "Total: %d\n", test__total_regs);
-  fprintf(stderr, "Ran:   %d\n", test__total_ran);
-  fprintf(stderr, "Pass:  %d\n", test__total_pass);
-  fprintf(stderr, "Fail:  %d\n", test__total_fail);
-  fprintf(stderr, "Skip:  %d\n", test__total_regs - test__total_ran);
+  fputc('\n', stdout);
+  printf("Total: %d\n", test__total_regs);
+  printf("Ran:   %d\n", test__total_ran);
+  printf("Pass:  %d\n", test__total_pass);
+  printf("Fail:  %d\n", test__total_fail);
+  printf("Skip:  %d\n", test__total_regs - test__total_ran);
   if (!test__opts_no_timer)
-    fprintf(stderr, "Took %d ms.\n", test__total_time_ms);
+    printf("Took %d ms.\n", test__total_time_ms);
   exit(test__total_fail > 0 ? 1 : 0);
 }
 
@@ -47,10 +47,10 @@ uint64_t test__timer_mark(void) {
 void test__vlog(char const *fmt, ...) {
   if (!test__opts_verbose)
     return;
-  fprintf(stderr, "> ");
+  printf("> ");
   va_list args;
   va_start(args, fmt);
-  vfprintf(stderr, fmt, args);
+  vprintf(fmt, args);
   va_end(args);
 }
 
@@ -60,7 +60,7 @@ void test__vlog_noprefix(char const *fmt, ...) {
     return;
   va_list args;
   va_start(args, fmt);
-  vfprintf(stderr, fmt, args);
+  vprintf(fmt, args);
   va_end(args);
 }
 
