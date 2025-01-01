@@ -1,7 +1,7 @@
 /* This file should only be included by exec.c */
 
 
-/* Some editors complain about vminst() missing. Bit of a tosser really. */
+/* Some editors complain about vminst() missing. */
 #ifndef RVM_INTERP_
 #  define vminst(n, c...)
 #endif
