@@ -74,19 +74,6 @@ static excp vm__interpreter(uint64_t start_pc);
     } while (0)
 #endif
 
-/* Macro to check if a const rel index is valid. */
-#ifdef PERF_
-#  define check_k(n)
-#else
-#  define check_k(n) do { \
-      if (pc + (n) >= codelen) \
-        stop(E_OOB);     \
-    } while (0)
-#endif
-
-/* Macro to read a const. Must be preceded by check_k(). */
-#define gconst(n) (code[pc + (n)])
-
 /* Detect if we can use direct threading dispatch. */
 #if defined(__GNUC__) || defined(__clang__)
 #  define USE_THREADED_DISPATCH

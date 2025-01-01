@@ -13,8 +13,8 @@
 00 00 00 00 00 00 00 00    # (padding)
 
 # .code section:
-10 00 00 00 00 00 00 00    # _loop: push #0
-7d 00 00 fe ff ff ff ff    # jmp _loop
+0f 00 00 00 00 00 00 00    # _loop: push #0
+68 00 00 fe ff ff ff ff    # jmp _loop
 
 # strtab:
 00 2e 63 6f 64 65 00 00    # .code

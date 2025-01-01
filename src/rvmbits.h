@@ -166,7 +166,6 @@ OP_HLT,            /* [     ]   terminates the vm */
 /* Data manipulation */
 OP_MOV,            /* [AB   ]   copy reg B to reg A */
 OP_MOVI,           /* [A   M]   copy M to reg A */
-OP_MOVK,           /* [A   M]   load a pc-rel-const into reg A */
 OP_LOD,            /* [A   M]   load from data pool (data[M]) into reg A */
 OP_LODS,           /* [A   M]   load from stack (%bp + M) into reg A */
 OP_LODA,           /* [A   M]   load from arg stack */
@@ -178,56 +177,39 @@ OP_STRAR,          /* [AB   ]   store to arg stack using reg B as index */
 OP_SWP,            /* [AB   ]   swap reg A and reg B */
 OP_PUSH,           /* [A    ]   push reg A onto stack */
 OP_PUSHI,          /* [    M]   push M onto stack */
-OP_PUSHK,          /* [    M]   push a pc-rel-const onto stack */
 OP_POP,            /* [A    ]   pop the stack and store the top-item into reg A */
 /* Integer arithmetic */
 OP_ADD,            /* [ABC  ]   A = B + C */
 OP_ADDI,           /* [AB  M]   A = B + M */
-OP_ADDK,           /* [AB  M]   A = B + K */
 OP_SUB,            /* [ABC  ]   A = B - C */
 OP_SUBI,           /* [AB  M]   A = B - M */
 OP_SUBIR,          /* [AB  M]   A = M - B */
-OP_SUBK,           /* [AB  M]   A = B - K */
-OP_SUBKR,          /* [AB  M]   A = K - B */
 OP_MUL,            /* [ABC  ]   A = B * C */
 OP_MULI,           /* [AB  M]   A = B * M */
-OP_MULK,           /* [AB  M]   A = B * K */
 OP_IMUL,           /* [ABC  ]   A = iB * iC */
 OP_IMULI,          /* [AB  M]   A = iB * iM */
-OP_IMULK,          /* [AB  M]   A = iB * iK */
 OP_DIV,            /* [ABC  ]   A = B / C */
 OP_DIVI,           /* [AB  M]   A = B / M */
 OP_DIVIR,          /* [AB  M]   A = M / B */
-OP_DIVK,           /* [AB  M]   A = B / K */
-OP_DIVKR,          /* [AB  M]   A = K / B */
 OP_IDIV,           /* [ABC  ]   A = iB / iC */
 OP_IDIVI,          /* [AB  M]   A = iB / iM */
 OP_IDIVIR,         /* [AB  M]   A = iM / iB */
-OP_IDIVK,          /* [AB  M]   A = iB / iK */
-OP_IDIVKR,         /* [AB  M]   A = iK / iB */
 OP_MOD,            /* [ABC  ]   A = B mod C */
 OP_MODI,           /* [AB  M]   A = B mod M */
 OP_MODIR,          /* [AB  M]   A = M mod B */
-OP_MODK,           /* [AB  M]   A = B mod K */
-OP_MODKR,          /* [AB  M]   A = K mod B */
 OP_IMOD,           /* [ABC  ]   A = iB mod iC */
 OP_IMODI,          /* [AB  M]   A = iB mod iM */
 OP_IMODIR,         /* [AB  M]   A = iM mod iB */
-OP_IMODK,          /* [AB  M]   A = iB mod iK */
-OP_IMODKR,         /* [AB  M]   A = iK mod iB */
 OP_INC,            /* [A    ]   A++ */
 OP_DEC,            /* [A    ]   A-- */
 OP_NEG,            /* [AB   ]   A = -B */
 /* Bitwise ops */
 OP_AND,            /* [ABC  ]   A = B & C */
 OP_ANDI,           /* [AB  M]   A = B & M */
-OP_ANDK,           /* [AB  M]   A = B & K */
 OP_IOR,            /* [ABC  ]   A = B | C */
 OP_IORI,           /* [AB  M]   A = B | M */
-OP_IORK,           /* [AB  M]   A = B | K */
 OP_XOR,            /* [ABC  ]   A = B ^ C */
 OP_XORI,           /* [AB  M]   A = B ^ M */
-OP_XORK,           /* [AB  M]   A = B ^ K */
 OP_NOT,            /* [AB   ]   A = ~B */
 OP_SHL,            /* [ABC  ]   A = B << C */
 OP_SHLI,           /* [AB  M]   A = B << M */
@@ -254,11 +236,8 @@ OP_BTCG,           /* [AB   ]   test bit B of reg A then complement it */
 OP_CMP,            /* [AB   ]   (*) A - B */
 OP_CMPI,           /* [A   M]   (*) A - M */
 OP_CMPIR,          /* [A   M]   (*) M - A */
-OP_CMPK,           /* [A   M]   (*) A - K */
-OP_CMPKR,          /* [A   M]   (*) K - A */
 OP_TEST,           /* [AB   ]   (*) A & B */
 OP_TESTI,          /* [A   M]   (*) A & M */
-OP_TESTK,          /* [A   M]   (*) A & K */
 OP_STC,            /* [     ]   set the carry flag */
 OP_STO,            /* [     ]   set the overflow flag */
 OP_STS,            /* [     ]   set the sign flag */

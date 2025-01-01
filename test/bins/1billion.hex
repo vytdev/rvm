@@ -14,7 +14,7 @@
 
 # .code section:
 04 00 00 00 ca 9a 3b 00    # mov %r0, #1_000_000_000 ; the loop count
-92 00 00 ff ff ff ff ff    # _loop: loop %r0, _loop
+7d 00 00 ff ff ff ff ff    # _loop: loop %r0, _loop
 04 00 00 00 00 00 00 00    # mov %r0, #0    ; vmcall 0x0 (exit)
 04 10 00 7f 00 00 00 00    # mov %r1, #127
 01 00 00 03 00 00 00 00    # trap #3

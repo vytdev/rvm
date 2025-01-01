@@ -13,7 +13,7 @@
 00 00 00 00 00 00 00 00    # (padding)
 
 # .code section:
-7c 00 00 ff ff ff ff ff    # jmp <somewhere_else>
+67 00 00 ff ff ff ff ff    # jmp <somewhere_else>
 
 # strtab:
 00 2e 63 6f 64 65 00 00    # .code

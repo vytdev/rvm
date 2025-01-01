@@ -33,12 +33,6 @@ vminst(MOVI, {
   inext();
 })
 
-vminst(MOVK, {
-  check_k(im(i));
-  reg[rA(i)] = gconst(im(i));
-  inext();
-})
-
 vminst(LOD, {
   u64 idx = im(i);
   #ifndef PERF_
@@ -136,12 +130,6 @@ vminst(PUSHI, {
   inext();
 })
 
-vminst(PUSHK, {
-  check_k(im(i));
-  push(gconst(im(i)));
-  inext();
-})
-
 vminst(POP, {
   #ifndef PERF_
   if (sp <= bp)
@@ -163,12 +151,6 @@ vminst(ADDI, {
   inext();
 })
 
-vminst(ADDK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] + gconst(im(i));
-  inext();
-})
-
 vminst(SUB, {
   reg[rA(i)] = reg[rB(i)] - reg[rC(i)];
   inext();
@@ -184,18 +166,6 @@ vminst(SUBIR, {
   inext();
 })
 
-vminst(SUBK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] - gconst(im(i));
-  inext();
-})
-
-vminst(SUBKR, {
-  check_k(im(i));
-  reg[rA(i)] = gconst(im(i)) - reg[rB(i)];
-  inext();
-})
-
 vminst(MUL, {
   reg[rA(i)] = reg[rB(i)] * reg[rC(i)];
   inext();
@@ -203,12 +173,6 @@ vminst(MUL, {
 
 vminst(MULI, {
   reg[rA(i)] = reg[rB(i)] * im(i);
-  inext();
-})
-
-vminst(MULK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] * gconst(im(i));
   inext();
 })
 
@@ -226,14 +190,6 @@ vminst(IMULI, {
   inext();
 })
 
-vminst(IMULK, {
-  check_k(im(i));
-  reg[rA(i)] = (uint64_t)(
-      (int64_t)reg[rB(i)] *
-      (int64_t)gconst(im(i)));
-  inext();
-})
-
 vminst(DIV, {
   reg[rA(i)] = reg[rB(i)] / reg[rC(i)];
   inext();
@@ -246,18 +202,6 @@ vminst(DIVI, {
 
 vminst(DIVIR, {
   reg[rA(i)] = im(i) / reg[rB(i)];
-  inext();
-})
-
-vminst(DIVK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] / gconst(im(i));
-  inext();
-})
-
-vminst(DIVKR, {
-  check_k(im(i));
-  reg[rA(i)] = gconst(im(i)) / reg[rB(i)];
   inext();
 })
 
@@ -282,22 +226,6 @@ vminst(IDIVIR, {
   inext();
 })
 
-vminst(IDIVK, {
-  check_k(im(i));
-  reg[rA(i)] = (uint64_t)(
-      (int64_t)reg[rB(i)] /
-      (int64_t)gconst(im(i)));
-  inext();
-})
-
-vminst(IDIVKR, {
-  check_k(im(i));
-  reg[rA(i)] = (uint64_t)(
-      (int64_t)gconst(im(i)) /
-      (int64_t)reg[rB(i)]);
-  inext();
-})
-
 vminst(MOD, {
   reg[rA(i)] = reg[rB(i)] % reg[rC(i)];
   inext();
@@ -310,18 +238,6 @@ vminst(MODI, {
 
 vminst(MODIR, {
   reg[rA(i)] = im(i) % reg[rB(i)];
-  inext();
-})
-
-vminst(MODK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] % gconst(im(i));
-  inext();
-})
-
-vminst(MODKR, {
-  check_k(im(i));
-  reg[rA(i)] = gconst(im(i)) % reg[rB(i)];
   inext();
 })
 
@@ -342,22 +258,6 @@ vminst(IMODI, {
 vminst(IMODIR, {
   reg[rA(i)] = (uint64_t)(
       (int64_t)im(i) %
-      (int64_t)reg[rB(i)]);
-  inext();
-})
-
-vminst(IMODK, {
-  check_k(im(i));
-  reg[rA(i)] = (uint64_t)(
-      (int64_t)reg[rB(i)] %
-      (int64_t)gconst(im(i)));
-  inext();
-})
-
-vminst(IMODKR, {
-  check_k(im(i));
-  reg[rA(i)] = (uint64_t)(
-      (int64_t)gconst(im(i)) %
       (int64_t)reg[rB(i)]);
   inext();
 })
@@ -389,12 +289,6 @@ vminst(ANDI, {
   inext();
 })
 
-vminst(ANDK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] & gconst(im(i));
-  inext();
-})
-
 vminst(IOR, {
   reg[rA(i)] = reg[rB(i)] | reg[rC(i)];
   inext();
@@ -405,12 +299,6 @@ vminst(IORI, {
   inext();
 })
 
-vminst(IORK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] | gconst(im(i));
-  inext();
-})
-
 vminst(XOR, {
   reg[rA(i)] = reg[rB(i)] ^ reg[rC(i)];
   inext();
@@ -418,12 +306,6 @@ vminst(XOR, {
 
 vminst(XORI, {
   reg[rA(i)] = reg[rB(i)] ^ im(i);
-  inext();
-})
-
-vminst(XORK, {
-  check_k(im(i));
-  reg[rA(i)] = reg[rB(i)] ^ gconst(im(i));
   inext();
 })
 
@@ -628,20 +510,6 @@ vminst(CMPIR, {
   inext();
 })
 
-vminst(CMPK, {
-  check_k(im(i));
-  u64 k = gconst(im(i));
-  do_cmp(reg[rA(i)], k);
-  inext();
-})
-
-vminst(CMPKR, {
-  check_k(im(i));
-  u64 k = gconst(im(i));
-  do_cmp(k, reg[rA(i)]);
-  inext();
-})
-
 #undef do_cmp
 #define do_test(x,y) do { \
     u64 r = (x) & (y);    \
@@ -661,13 +529,6 @@ vminst(TEST, {
 
 vminst(TESTI, {
   do_test(reg[rA(i)], im(i));
-  inext();
-})
-
-vminst(TESTK, {
-  check_k(im(i));
-  u64 k = gconst(im(i));
-  do_test(reg[rA(i)], k);
   inext();
 })
 
