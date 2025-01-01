@@ -145,13 +145,13 @@ void show_help(void) {
   #endif
 
   fprintf(stderr, "Base ABI version: v%u\n", RVM_VER);
-  fprintf(stderr, "Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
+  fprintf(stderr, "Copyright (c) 2024-2025 Vincent Yanzee J. Tan <vytdev>\n");
 }
 
 
 void show_version(void) {
   printf("Redstone Abstract Virtual Machine (rvm)\n");
-  printf("Copyright (c) 2024 Vincent Yanzee J. Tan <vytdev>\n");
+  printf("Copyright (c) 2024-2025 Vincent Yanzee J. Tan <vytdev>\n");
   printf("Built on %s at %s\n", __DATE__, __TIME__);
   printf("Base ABI version: v%u\n", RVM_VER);
   printf("Opcode count: %u ops\n", opcnt);

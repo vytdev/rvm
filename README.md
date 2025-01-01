@@ -20,6 +20,6 @@ For more info, you can checkout the [docs folder](docs/).
 
 ## License
 
-Copyright &copy; 2024 Vincent Yanzee J. Tan.
+Copyright &copy; 2024-2025 Vincent Yanzee J. Tan.
 
 Licensed under the MIT License. See [LICENSE](LICENSE) for details.
