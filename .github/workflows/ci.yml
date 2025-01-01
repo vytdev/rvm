@@ -21,15 +21,7 @@ jobs:
         sudo apt install make gcc
 
     - name: Build
-      run: make -Csrc B=1
+      run: make -j -Csrc B=1
 
     - name: Test
-      run: make -Ctest
-
-    - name: Benchmark
-      run: |
-        cd test
-        ./h2b.py bins/fib40_slow.hex t
-        ../src/rvm t
-        rm t
-        cd ..
+      run: make -j -Ctest
