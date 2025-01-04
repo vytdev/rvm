@@ -35,80 +35,64 @@ vminst(MOVI, {
 
 vminst(LOD, {
   u64 idx = im(i);
-  #ifndef PERF_
   if (idx >= datalen)
     stop(E_OOB);
-  #endif
   reg[rA(i)] = data[idx];
   inext();
 })
 
 vminst(LODS, {
   u64 idx = im(i);
-  #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
     stop(E_OOB);
-  #endif
   reg[rA(i)] = stack[bp + idx];
   inext();
 })
 
 vminst(LODA, {
   u64 idx = bp - 3 - im(i);
-  #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
     stop(E_OOB);
-  #endif
   reg[rA(i)] = stack[idx];
   inext();
 })
 
 vminst(LODAR, {
   u64 idx = bp - 3 - reg[rB(i)];
-  #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
     stop(E_OOB);
-  #endif
   reg[rA(i)] = stack[idx];
   inext();
 })
 
 vminst(STR, {
   u64 idx = im(i);
-  #ifndef PERF_
   if (idx >= datalen)
     stop(E_OOB);
-  #endif
   data[idx] = reg[rA(i)];
   inext();
 })
 
 vminst(STRS, {
   u64 idx = im(i);
-  #ifndef PERF_
   if (idx >= sp - bp || stack_len <= bp + idx)
     stop(E_OOB);
-  #endif
   stack[bp + idx] = reg[rA(i)];
   inext();
 })
 
 vminst(STRA, {
   u64 idx = bp - 3 - im(i);
-  #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
     stop(E_OOB);
-  #endif
   stack[idx] = reg[rA(i)];
   inext();
 })
 
 vminst(STRAR, {
   u64 idx = bp - 3 - reg[rB(i)];
-  #ifndef PERF_
   if (idx > bp || idx < stack[bp - 1])
     stop(E_OOB);
-  #endif
   stack[idx] = reg[rA(i)];
   inext();
 })
@@ -131,10 +115,8 @@ vminst(PUSHI, {
 })
 
 vminst(POP, {
-  #ifndef PERF_
   if (sp <= bp)
     stop(E_STUND);
-  #endif
   pop(reg[rA(i)]);
   inext();
 })
@@ -874,10 +856,8 @@ vminst(SAVE, {
 })
 
 vminst(RSTR, {
-  #ifndef PERF_
   if (sp < bp || sp - bp < 16)
     stop(E_STUND);
-  #endif
   for (int i = 16 - 1; i >= 0; i--)
     pop(reg[i]);
   inext();
@@ -894,37 +874,29 @@ vminst(JRN, {
 })
 
 vminst(SAL, {
-  #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < im(i))
     stop(E_STOVF);
-  #endif
   sp += im(i);
   inext();
 })
 
 vminst(SALR, {
-  #ifndef PERF_
   if (stack_len <= sp || stack_len - sp < reg[rA(i)])
     stop(E_STOVF);
-  #endif
   sp += reg[rA(i)];
   inext();
 })
 
 vminst(SDL, {
-  #ifndef PERF_
   if (sp < bp || sp - bp < im(i))
     stop(E_STUND);
-  #endif
   sp -= im(i);
   inext();
 })
 
 vminst(SDLR, {
-  #ifndef PERF_
   if (sp < bp || sp - bp < reg[rA(i)])
     stop(E_STUND);
-  #endif
   sp -= reg[rA(i)];
   inext();
 })

@@ -53,26 +53,18 @@ static excp vm__interpreter(uint64_t start_pc);
 #define getf(f) (fl & (f))
 
 /* Macro to push into stack. */
-#ifdef PERF_
-#  define push(v) (stack[sp++] = (v))
-#else
-#  define push(v) do {     \
-      if (sp >= stack_len) \
-        stop(E_STOVF);     \
-      stack[sp++] = (v);   \
-    } while (0)
-#endif
+#define push(v) do {     \
+    if (sp >= stack_len) \
+      stop(E_STOVF);     \
+    stack[sp++] = (v);   \
+  } while (0)
 
 /* Macro to pop from stack. */
-#ifdef PERF_
-#  define pop(v) ((v) = stack[--sp])
-#else
-#  define pop(v) do {     \
-      if (sp == 0)        \
-        stop(E_STUND);    \
-      (v) = stack[--sp];  \
-    } while (0)
-#endif
+#define pop(v) do {     \
+    if (sp == 0)        \
+      stop(E_STUND);    \
+    (v) = stack[--sp];  \
+  } while (0)
 
 /* Detect if we can use direct threading dispatch. */
 #if defined(__GNUC__) || defined(__clang__)
@@ -133,10 +125,8 @@ static excp vm__interpreter(uint64_t start_pc) {
   interp_start:
 
   /* Make sure we're still reading within the bytecode. */
-  #ifndef PERF_
   if (pc >= codelen)
     stop(E_ILL);
-  #endif
 
   /* For benchmarking. */
   #ifdef BENCHMARK_
@@ -148,13 +138,9 @@ static excp vm__interpreter(uint64_t start_pc) {
 
   #ifdef USE_THREADED_DISPATCH
 
-    #ifndef PERF_
     if (op(i) < opcnt)
       goto *disptab[op(i)];
     stop(E_ILL);
-    #else
-    goto *disptab[op(i)];
-    #endif
 
   #else /* if !defined(USE_THREADED_DISPATCH) */
 

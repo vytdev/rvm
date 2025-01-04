@@ -140,10 +140,6 @@ void show_help(void) {
     "    args...           Program args to pass.\n"
     "\n", main_argv[0]);
 
-  #ifdef PERF_
-  fprintf(stderr, "warning: Fast mode is enabled. Unsafe!\n");
-  #endif
-
   fprintf(stderr, "Base ABI version: v%u\n", RVM_VER);
   fprintf(stderr, "Copyright (c) 2024-2025 Vincent Yanzee J. Tan <vytdev>\n");
 }
@@ -159,8 +155,6 @@ void show_version(void) {
   /* Build type. */
   #if defined(DEBUG_)
   printf("Build type: debug\n");
-  #elif defined(PERF_)
-  printf("Build type: perf\n");
   #else
   printf("Build type: release\n");
   #endif

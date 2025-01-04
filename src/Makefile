@@ -53,7 +53,7 @@ clean:
 # Build configs.
 #
 
-PHONY += debug release perf
+PHONY += debug release
 
 debug: ICFLAGS+=  -g -DDEBUG_
 debug: ILDFLAGS+= -g
@@ -63,9 +63,6 @@ release: ICFLAGS+=  -flto -O3 -march=native -mtune=native \
 	-fomit-frame-pointer -funroll-loops -ftree-vectorize
 release: ILDFLAGS+= -flto -O3
 release: build
-
-perf: ICFLAGS+= -DPERF_
-perf: release
 
 #
 # Print help message about this Makefile.
@@ -86,8 +83,6 @@ help:
 	@echo 'Build types:'
 	@echo '  debug       Support debugging. No optimisations.'
 	@echo '  release     Build for release (default).'
-	@echo '  perf        Enable aggressive in-code optimisations (use'
-	@echo '              with caution!).'
 	@echo
 	@echo 'Utilities:'
 	@echo '  help        Show this help.'
