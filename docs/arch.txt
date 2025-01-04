@@ -56,7 +56,7 @@ III. Instruction sets
         a stack machine. [TODO]
 
   FPX   Floating-Point Extension -- Adds support to
-        floating-point operations. (%f0 -> %f15) [TODO]
+        floating-point operations. (%f0 -> %f15) [DONE]
 
   WVE   Wide Vector Extension -- Adds support to 1024-bit
         registers and operations. (%w0 -> %w15) [TODO]

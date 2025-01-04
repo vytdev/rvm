@@ -121,6 +121,7 @@ typedef struct rvm_reloc {
 #define R13 13
 #define R14 14
 #define R15 15
+#define RCNT 16
 
 /* Flags */
 #define FC  (1<<0) /* carry flag */
@@ -305,6 +306,84 @@ OP_SALR,           /* [A    ]   allocate A items on stack */
 OP_SDL,            /* [    M]   deallocate M items from stack */
 OP_SDLR,           /* [A    ]   deallocate A items from stack */
 OP_CFL,            /* [     ]   clear the flags internal register */
+/* Floating point */
+OP_FLDI,           /* [AB   ]   load an integer */
+OP_FLDU,           /* [AB   ]   load an unsigned integer */
+OP_FLDS,           /* [AB   ]   load a single-prec value */
+OP_FLDD,           /* [AB   ]   load a double-prec value */
+OP_FSTI,           /* [AB   ]   store as integer */
+OP_FSTU,           /* [AB   ]   store as unsigned integer */
+OP_FSTS,           /* [AB   ]   store as single-prec value */
+OP_FSTD,           /* [AB   ]   store as double-prec value */
+OP_FLCINF,         /* [A    ]   A = inf */
+OP_FLCNGF,         /* [A    ]   A = -inf */
+OP_FLCNAN,         /* [A    ]   A = nan */
+OP_FLCNZR,         /* [A    ]   A = 0 */
+OP_FLCNOE,         /* [A    ]   A = 1 */
+OP_FLCPI,          /* [A    ]   A = pi */
+OP_FLCE,           /* [A    ]   A = e */
+OP_FLCLG2E,        /* [A    ]   A = log2(e) */
+OP_FLCLG10E,       /* [A    ]   A = log10(e) */
+OP_FLCLN2,         /* [A    ]   A = ln(2) */
+OP_FLCLN10,        /* [A    ]   A = ln(10) */
+OP_FLCPI2,         /* [A    ]   A = pi / 2 */
+OP_FLCPI4,         /* [A    ]   A = pi / 4 */
+OP_FLCSQ2,         /* [A    ]   A = sqrt(2) */
+OP_FLCRSQ2,        /* [A    ]   A = 1 / sqrt(2) */
+OP_FADD,           /* [ABC  ]   A = B + C */
+OP_FSUB,           /* [ABC  ]   A = B - C */
+OP_FMUL,           /* [ABC  ]   A = B * C */
+OP_FDIV,           /* [ABC  ]   A = B / C */
+OP_FMOD,           /* [ABC  ]   A = B mod C */
+OP_FNEG,           /* [AB   ]   A = -B  */
+OP_FABS,           /* [AB   ]   A = |B| */
+OP_FREC,           /* [AB   ]   A = 1 / B */
+OP_FSIN,           /* [AB   ]   A = sin(B) */
+OP_FCOS,           /* [AB   ]   A = cos(B) */
+OP_FTAN,           /* [AB   ]   A = tan(B) */
+OP_FASIN,          /* [AB   ]   A = asin(B) */
+OP_FACOS,          /* [AB   ]   A = acos(B) */
+OP_FATAN,          /* [AB   ]   A = atan(B) */
+OP_FATAN2,         /* [ABC  ]   A = atan(B/C) */
+OP_FSINH,          /* [AB   ]   A = sinh(B) */
+OP_FCOSH,          /* [AB   ]   A = cosh(B) */
+OP_FTANH,          /* [AB   ]   A = tanh(B) */
+OP_FASINH,         /* [AB   ]   A = asinh(B) */
+OP_FACOSH,         /* [AB   ]   A = acosh(B) */
+OP_FATANH,         /* [AB   ]   A = atanh(B) */
+OP_FEXP,           /* [AB   ]   A = e ^ B */
+OP_FEXP2,          /* [AB   ]   A = 2 ^ B */
+OP_FLN,            /* [AB   ]   A = ln(B) */
+OP_FLG2,           /* [AB   ]   A = log2(B) */
+OP_FLG10,          /* [AB   ]   A = log10(B) */
+OP_FPOW,           /* [ABC  ]   A = B ^ C */
+OP_FSQRT,          /* [AB   ]   A = sqrt(B) */
+OP_FCBRT,          /* [AB   ]   A = cbrt(B) */
+OP_FCEIL,          /* [AB   ]   A = ceil(B) */
+OP_FFLR,           /* [AB   ]   A = floor(B) */
+OP_FRND,           /* [AB   ]   A = round(B) */
+OP_FTRUNC,         /* [AB   ]   A = trunc(B) */
+OP_FSGN,           /* [AB   ]   A = sign(B) */
+OP_FCPSG,          /* [ABC  ]   A = |B| * sign(C) */
+OP_FGMA,           /* [AB   ]   A = gamma(B) */
+OP_FLGMA,          /* [AB   ]   A = lgamma(B) */
+OP_FTGMA,          /* [AB   ]   A = tgamma(B) */
+OP_FERF,           /* [AB   ]   A = erf(B) */
+OP_FERFC,          /* [AB   ]   A = erfc(B) */
+OP_FNEXT,          /* [ABC  ]   get the next value towards B and store to A */
+OP_FCI2F,          /* [AB   ]   cast int B to float and store to A */
+OP_FCI2D,          /* [AB   ]   cast int B to double and store to A */
+OP_FCU2F,          /* [AB   ]   cast uint B to float and store to A */
+OP_FCU2D,          /* [AB   ]   cast uint B to double and store to A */
+OP_FCF2I,          /* [AB   ]   cast float B to int and store to A */
+OP_FCF2U,          /* [AB   ]   cast float B to uint and store to A */
+OP_FCF2D,          /* [AB   ]   cast float B to double and store to A */
+OP_FCD2I,          /* [AB   ]   cast double B to int and store to A */
+OP_FCD2U,          /* [AB   ]   cast double B to uint and store to B */
+OP_FCD2F,          /* [AB   ]   cast double B to float and store to A */
+OP_FCMP,           /* [AB   ]   compare two float register */
+OP_FISNAN,         /* [A    ]   set ZF if NaN */
+OP_FISINF,         /* [A    ]   set ZF if inf/-inf */
 opcnt,    /* internal: The number of opcodes. */
 } opcode;
 

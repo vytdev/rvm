@@ -1,0 +1,26 @@
+# Load PI constant into %f5
+
+7f 52 56 4d                # magic
+01 00                      # abi_ver
+00                         # type (RHT_LOADABLE)
+00                         # flags
+00 00 00 00 00 00 00 00    # entryp
+50 00 00 00 00 00 00 00    # shoff
+01 00 00 00 00 00 00 00    # shnum
+48 00 00 00 00 00 00 00    # stroff
+00 00 00 00 00 00 00 00    # (padding)
+00 00 00 00 00 00 00 00    # (padding)
+00 00 00 00 00 00 00 00    # (padding)
+
+# .code section:
+98 50 00 00 00 00 00 00    # flcpi %f5
+
+# strtab:
+00 2e 63 6f 64 65 00 00    # .code
+
+# shtab (for code section):
+01 00 00 00                # name
+00 00 00 00                # (padding)
+40 00 00 00 00 00 00 00    # offset
+08 00 00 00 00 00 00 00    # size
+01 00 00 00 00 00 00 00    # entcnt

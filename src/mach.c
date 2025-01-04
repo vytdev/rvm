@@ -26,13 +26,14 @@ char     exec_mode        = X_USER;
 
 /* Thread context. */
 TLOCAL uint32_t tid       = 0;
-TLOCAL uint64_t reg[16];
+TLOCAL uint64_t reg[RCNT];
 TLOCAL uint64_t *stack    = NULL;
 TLOCAL uint32_t stack_len = 0;
 TLOCAL uint64_t last_pc   = 0;
 TLOCAL uint64_t last_sp   = 0;
 TLOCAL uint64_t last_bp   = 0;
 TLOCAL uint64_t last_fl   = 0;
+TLOCAL double fp_reg[RCNT];
 
 
 const char *excp_msg(excp e) {
@@ -71,6 +72,29 @@ void dump_regs(void) {
   preg("r13", R13);
   preg("r14", R14);
   preg("r15", R15);
+  #undef preg
+}
+
+
+void dump_fp_regs(void) {
+  #define preg(n,s) \
+    fprintf(stderr, "  %%" n "  %+.9lf\n", fp_reg[(s)])
+  preg("f0 ", R0);
+  preg("f1 ", R1);
+  preg("f2 ", R2);
+  preg("f3 ", R3);
+  preg("f4 ", R4);
+  preg("f5 ", R5);
+  preg("f6 ", R6);
+  preg("f7 ", R7);
+  preg("f8 ", R8);
+  preg("f9 ", R9);
+  preg("f10", R10);
+  preg("f11", R11);
+  preg("f12", R12);
+  preg("f13", R13);
+  preg("f14", R14);
+  preg("f15", R15);
   #undef preg
 }
 
@@ -145,8 +169,6 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
     return false;
   }
   /* Some setup. */
-  for (int i = 0; i < 16; i++)
-    reg[i] = 0;
   *main_pc = hdr.entryp;
   src = prog;
   len = sz;
@@ -173,8 +195,10 @@ bool vth_init(uint32_t stlen) {
     return false;
   stack_len = stlen;
   /* Initialise the registers. */
-  for (int i = 0; i < 16; i++)
-    reg[i] = 0;
+  for (int i = 0; i < RCNT; i++) {
+    reg[i]    = 0;
+    fp_reg[i] = 0.0;
+  }
   return true;
 }
 
@@ -186,8 +210,10 @@ bool vth_free(void) {
     free(stack);
   stack = NULL;
   stack_len = 0;
-  for (int i = 0; i < 16; i++)
-    reg[i] = 0;
+  for (int i = 0; i < RCNT; i++) {
+    reg[i]    = 0;
+    fp_reg[i] = 0.0;
+  }
   return true;
 }
 
@@ -201,6 +227,7 @@ void show_err(excp s) {
   /* Dump the contents of all registers. */
   fprintf(stderr, "  (program registers)\n");
   dump_regs();
+  dump_fp_regs();
   /* Dump the internal states. */
   #define print_state(name, st) \
     fprintf(stderr, "  " name "  0x%016"V64S"x  %"V64S"u\n", (st), (st))

@@ -18,13 +18,14 @@ extern uint32_t default_stlen;
 
 /* Per-thread context */
 extern TLOCAL uint32_t tid;
-extern TLOCAL uint64_t reg[16];
+extern TLOCAL uint64_t reg[RCNT];
 extern TLOCAL uint64_t *stack;
 extern TLOCAL uint32_t stack_len;
 extern TLOCAL uint64_t last_pc;
 extern TLOCAL uint64_t last_sp;
 extern TLOCAL uint64_t last_bp;
 extern TLOCAL uint64_t last_fl;
+extern TLOCAL double fp_reg[RCNT];
 
 /* VM states */
 extern char vmstate;
@@ -54,6 +55,9 @@ const char *excp_msg(excp e);
 
 /* Dump the caller thread's registers into stderr. */
 void dump_regs(void);
+
+/* Dump the floating-point registers into stderr. */
+void dump_fp_regs(void);
 
 /* Load a program. The vm state must be in provisioning. */
 bool vload(char *prog, uint64_t sz, uint64_t *main_pc);

@@ -5,10 +5,12 @@ CC=      gcc
 RM=      rm -f
 
 CFLAGS=  -std=gnu99
-LDFLAGS= -lm
+LDFLAGS=
 
 CFLAGS+=  $(ICFLAGS) $(MYCFLAGS)
 LDFLAGS+= $(ILDFLAGS) $(MYLDFLAGS)
+
+DYNLIBS= -lm
 
 OBJ= main.o $(obj-core)
 TRG= rvm
@@ -32,7 +34,7 @@ include List.mk
 -include .depend
 
 $(TRG): $(OBJ)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(DYNLIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<

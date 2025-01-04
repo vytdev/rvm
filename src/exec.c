@@ -5,6 +5,7 @@
 #include "util.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define RVM_INTERP_
 
@@ -125,6 +126,7 @@ static excp vm__interpreter(uint64_t start_pc) {
   void * const disptab[opcnt] = {
     #define vminst(n, c...) [OP_##n] = &&D_##n,
     #include "exec_defs.c.h"
+    #include "exec_fpu.c.h"
     #undef vminst
   };
   #endif
@@ -158,6 +160,7 @@ static excp vm__interpreter(uint64_t start_pc) {
     switch ((opcode)op(i)) {
       #define vminst(n, c...) case (OP_##n): goto D_##n ;
       #include "exec_defs.c.h"
+      #include "exec_fpu.c.h"
       #undef vminst
       default: stop(E_ILL);
     }
@@ -167,6 +170,7 @@ static excp vm__interpreter(uint64_t start_pc) {
   /* Macros for opcode implementation. */
   #define vminst(n, c...) D_##n : c
   #include "exec_defs.c.h"
+  #include "exec_fpu.c.h"
   #undef vminst
 
   /* This is unreachable. */
