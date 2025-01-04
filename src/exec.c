@@ -1,5 +1,7 @@
 #include "mach.h"
 #include "rvmbits.h"
+#include "codec.h"
+#include "config.h"
 #include "util.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -10,7 +12,12 @@
 static excp vm__interpreter(uint64_t start_pc);
 
 /* Some interpreter macros. */
-#define fetch()   (code[pc++])
+#ifdef BO_LE
+#  define fetch() (code[pc++])
+#else
+#  define fetch() (read64((char*)(void*)(code + pc++)))
+#endif
+
 #define inext()   goto interp_start
 
 /* Raise VM exception. */

@@ -88,19 +88,13 @@ static inline bool load_code(ByteCode *bd) {
     rlog("entcnt is either zero or exceeds the section size.\n");
     return false;
   }
-  code = (uint64_t*)malloc(sizeof(uint64_t) * shdr.entcnt);
-  if (!code) {
-    rlog("Out of memory.\n");
-    return false;
-  }
-  codelen = shdr.entcnt;
   char *pload = bc_getpload(bd, shdr);
   if (!pload) {
     rlog("Unable to resolve the payload of the '.code' section.\n");
     return false;
   }
-  for (uint64_t i = 0; i < codelen; i++)
-    code[i] = read64(pload + i * 8);
+  code = (uint64_t*)pload;
+  codelen = shdr.entcnt;
   return true;
 }
 
@@ -116,19 +110,13 @@ static inline bool load_data(ByteCode *bd) {
     rlog("entcnt is either zero or exceeds the section size.\n");
     return false;
   }
-  data = (uint64_t*)malloc(sizeof(uint64_t) * shdr.entcnt);
-  if (!data) {
-    rlog("Out of memory.\n");
-    return false;
-  }
-  datalen = shdr.entcnt;
   char *pload = bc_getpload(bd, shdr);
   if (!pload) {
     rlog("Unable to resolve the payload of the '.data' section.\n");
     return false;
   }
-  for (uint64_t i = 0; i < datalen; i++)
-    data[i] = read64(pload + i * 8);
+  data = (uint64_t*)pload;
+  datalen  = shdr.entcnt;
   return true;
 }
 
@@ -166,8 +154,6 @@ bool vload(char *prog, uint64_t sz, uint64_t *main_pc) {
   if (!load_code(bd) || /* required */
       !load_data(bd)) { /* optional */
     /* Failure handling. */
-    if (code) free(code);
-    if (data) free(data);
     bc_close(bd);
     return false;
   }

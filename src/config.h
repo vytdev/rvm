@@ -105,22 +105,4 @@ typedef double   f64;
 #  define VVARS
 #endif
 
-/* Bit utils */
-#define bit_tst(x,p)  (((x) >> (p)) & 0x1)
-#define bit_set(x,p)  ((x) |  (U64C(1) << (p)))
-#define bit_clr(x,p)  ((x) & ~(U64C(1) << (p)))
-#define bit_cml(x,p)  ((x) ^  (U64C(1) << (p)))
-#define rol64(v, c) (((v) << (c)) | ((v) >> (64-(c))))
-#define ror64(v, c) (((v) >> (c)) | ((v) << (64-(c))))
-#define mod64(x) ((x) & 0x3f) /* x % 64 */
-
-/* Reinterpret cast */
-#define reinterp_cast(t,s,n) \
-    (((union {    \
-      s src;      \
-      t trg;      \
-    }){           \
-      .src = (n), \
-    }).trg)
-
 #endif // RVM_CONFIG_H_

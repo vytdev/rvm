@@ -37,7 +37,7 @@ vminst(LOD, {
   u64 idx = im(i);
   if (idx >= datalen)
     stop(E_OOB);
-  reg[rA(i)] = data[idx];
+  reg[rA(i)] = read64(data + idx);
   inext();
 })
 
@@ -69,7 +69,7 @@ vminst(STR, {
   u64 idx = im(i);
   if (idx >= datalen)
     stop(E_OOB);
-  data[idx] = reg[rA(i)];
+  write64((char*)(void*)(data + idx), reg[rA(i)]);
   inext();
 })
 
