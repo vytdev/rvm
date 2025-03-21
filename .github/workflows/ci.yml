@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
 
 jobs:
   build:
@@ -14,14 +12,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup
-      run: |
-        sudo apt update
-        sudo apt upgrade
-        sudo apt install make gcc
+    - uses: egor-tensin/setup-gcc@v1
+      with:
+        version: latest
+
+    - run: |
+        sudo apt install -y make
 
     - name: Build
-      run: make -j release
+      run: make -j B=1
 
     - name: Test
       run: make -j test
