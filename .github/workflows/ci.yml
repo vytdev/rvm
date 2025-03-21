@@ -21,7 +21,7 @@ jobs:
         sudo apt install make gcc
 
     - name: Build
-      run: make -j -Csrc B=1
+      run: make -j release
 
     - name: Test
-      run: make -j -Ctest
+      run: make -j test

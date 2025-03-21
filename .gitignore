@@ -1,3 +1,10 @@
-# Ignore editor files.
+# Ignore editor files
 *~
 .*.swp
+
+# Ignore built files
+*.o
+*.bin
+.depend
+rvm
+test/test
