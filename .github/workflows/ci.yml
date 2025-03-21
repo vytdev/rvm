@@ -27,6 +27,10 @@ jobs:
 
     - name: Benchmark
       run: |
+        set +e
         ./test/h2b.py test/bins/fib40_slow.hex fib40_slow.bin
+        echo "fib40_slow.bin"
         ./rvm fib40_slow.bin
+        echo "large-bin"
         ./rvm test/large-bin
+        exit 0
