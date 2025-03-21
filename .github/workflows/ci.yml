@@ -24,3 +24,9 @@ jobs:
 
     - name: Test
       run: make -j test
+
+    - name: Benchmark
+      run: |
+        ./test/h2b.py test/bins/fib40_slow.hex fib40_slow.bin
+        ./rvm fib40_slow.bin
+        ./rvm test/large-bin
