@@ -1,0 +1,105 @@
+ 
+  rvm spec
+  Revised: 2025-05-01
+
+
+summary:
+========
+
+- little endian
+- 16 registers (r0-r15)
+- r15 => sp
+- fixed 32-bit instructions
+
+internal registers:
+- pc   program counter
+- cf   condition flags
+
+condition flags:
+- EQ   equals
+- AB   unsigned greater
+- GT   signed greater
+
+possible extensions:
+- fvals: floating point support
+- wvx:   wide vector extension (512-bit vectors..)
+- stvm:  stack vm (sdup, sadd, ssub, etc.)
+
+
+formats of different instruction encodings:
+
+  R-type:
+  |31   28|27   24|23   20|19     9|8      0|
+  |-------+-------+-------+--------+--------|
+  |  rgA  |  rgB  |  rgC  | func11 | opcode |
+
+  I-type:
+  |31   28|27   24|23             9|8      0|
+  |-------+-------+----------------+--------|
+  |  rgA  |  rgB  |    func15      | opcode |
+
+  M-type:
+  |31   28|27                     9|8      0|
+  |-------+------------------------+--------|
+  |  rgA  |         func19         | opcode |
+
+  J-type:
+  |31                             9|8      0|
+  |--------------------------------+--------|
+  |              func23            | opcode |
+
+
+
+tentative instruction set:
+  NOP  - no-op
+  MOV  - mov data across registers
+  XCHG - swap registers
+  ADD  - arithmetic add
+  SUB  - arithmetic subtract
+  MUL  - arithmetic multiplication
+  DIV  - arithmetic division
+  MOD  - arithmetic modulo
+  NEG  - negate reg integer
+  AND  - bitwise and
+  OR   - bitwise inclusive or
+  XOR  - bitwise exclusive or
+  NOT  - bitwise complement
+  SHL  - shift bits to left
+  SHR  - shift bits to right
+  CMP  - compare (a - b)
+  JMP  - unconditional jump
+  Jcc  - jump if condition
+  LOOP - decrement a register and jump if non-zero
+  TRAP - transfer control to host with status code
+  LOD  - load data from mem to register
+  STR  - store data from register to mem
+  PUSH - push to stack
+  POP  - pop from stack
+  CALL - setup stack frame for subroutine call
+  RET  - return to the caller
+  INC  - increment reg [equiv. add R, R, #1]
+  DEC  - decrement reg [equiv. sub R, R, #1]
+
+Jcc instructions:
+  jeq
+  jne
+  jgt
+  jlt
+  jab
+  jbl
+  jge
+  jle
+  jae
+  jbe
+
+
+impl notes:
+
+  condition       signed          unsigned
+  ---------       ----------      ----------
+  ( =) eq          EF              EF
+  (!=) ne         !EF             !EF
+  ( >) gt          GF              AF
+  ( <) lt         !EF && !GF      !EQ && !AF
+  (>=) ge (!<)     EF || GF        EF || AF
+  (<=) le (!>)    !GF             !AF
