@@ -35,7 +35,7 @@ struct rvm rvm_new(char *mem, rvm_uint memsz)
   return ctx;
 }
 
-const char *rvm_statstr(signed e)
+const char *rvm_strstat(signed e)
 {
   if (e < 0)
     e = -e;
@@ -46,6 +46,16 @@ const char *rvm_statstr(signed e)
   case RVM_EOK:       return "Ok";
   case RVM_ERR:       return "Error";
   default:            return "<reserved>";
+  }
+}
+
+const char *rvm_stropc(int opc)
+{
+  switch (opc) {
+# define DEF(op, idx) case (RVM_OP##op): return (#op);
+# include "opcodes.h"
+# undef DEF
+  default: return "<unknown>";
   }
 }
 
@@ -60,15 +70,7 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   code = (rvm_inst_t*)(void*)ctx->mem;
   codesz = ctx->memsz / RVM_INLN;
 
-#define VMFETCH() (inst = (codesz > pc ? code[pc++] : 0))
-
-  /* TODO: use a goto dispatch when available. */
-  while (1) {
-    switch (VMFETCH()) {
-    case 0x0: return -(RVM_FNC(inst) & 0xff);
-    default:  return RVM_EOK;
-    }
-  }
+  /* TODO: implementation. */
 
   return RVM_EOK;
 }

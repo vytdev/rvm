@@ -96,4 +96,11 @@
 #define RVM_ERR          1    /* Error */
 #define RVM_EHOST        32   /* Host defined (>32) */
 
+enum rvm_opcode {
+#define DEF(op, idx) RVM_OP##op = idx,
+#include "opcodes.h"
+#undef DEF
+  RVM_OP_ignore /* C89 doesn't allow trailing comma. */
+};
+
 #endif /* defs.h */

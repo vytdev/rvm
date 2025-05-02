@@ -63,7 +63,12 @@ struct rvm rvm_new(char *mem, rvm_uint memsz);
 /*
  * Returns a C-string explaining the given stat code `e`.
  */
-const char *rvm_statstr(signed e);
+const char *rvm_strstat(signed e);
+
+/*
+ * Returns a mnemonic C-string for opcode `opc`.
+ */
+const char *rvm_stropc(int opc);
 
 /*
  * Execute rvm ctx until an exception occurs.
