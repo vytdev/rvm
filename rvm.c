@@ -64,7 +64,8 @@ const char *rvm_stropc(int opc)
 
 
 /* Instruction that triggers a memory fault. */
-#define __TRAP_EMEMV RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
+#define __RVM_TRAP_EMEMV    RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
+#define __RVM_FETCH_INST()  (codesz > pc ? code[pc++] : __RVM_TRAP_EMEMV)
 
 /* Convinience shortcuts. */
 #define rgA reg[RVM_RGA(inst)]
@@ -78,7 +79,14 @@ const char *rvm_stropc(int opc)
     ctx->pc = pc;       \
   } while (0)
 #define vmbrk      vmsave; return
-#define vmfetch()  (inst = codesz > pc ? code[pc++] : __TRAP_EMEMV)
+
+/* Do byte-swap on big endian systems. */
+#if RVM_BORD == RVM_BORD_BIG
+#  define vmfetch()  (inst = RVM_BSWAP32(__RVM_FETCH_INST()))
+#else
+#  define vmfetch()  (inst = __RVM_FETCH_INST())
+#endif
+
 
 signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 {

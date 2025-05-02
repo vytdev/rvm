@@ -28,6 +28,12 @@
 
 #define RVM_SGXTD(x, b) (((x)^(1<<((b)-1)))-(1<<((b)-1)))
 
+#define RVM_BSWAP32(v) \
+  (((v >> 24) & 0x000000ff) | \
+   ((v >> 8 ) & 0x0000ff00) | \
+   ((v << 8 ) & 0x00ff0000) | \
+   ((v << 24) & 0xff000000))
+
 #if defined(__GNUC__)
 #define RVM_LIKELY(x)    (__builtin_expect(((x) != 0), 1))
 #define RVM_UNLIKELY(x)  (__builtin_expect(((x) != 0), 0))
