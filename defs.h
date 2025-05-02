@@ -75,21 +75,12 @@
 #define RVM_RGC(i) (((i) >> RVM_RGCPOS) & RVM_RGMASK) /* Extract regC. */
 #define RVM_FNC(i) ((i) >> RVM_FNPOS)                 /* Extract func bits. */
 
-/* rvm instruction encoding helpers. */
-#define RVM_ETYPJ(op, f23)        \
-  ((op) | ((f23) << RVM_FNPOS))     /* Encodes J-type instructions. */
-#define RVM_ETYPM(op, f19, rgA)   \
-  ((op) | ((f19) << RVM_FNPOS)    \
-        | ((rgA) << RVM_RGAPOS))    /* Encodes M-type instructions. */
-#define RVM_ETYPI(op, f15, rgA, rgB) \
-  ((op) | ((f15) << RVM_FNPOS)    \
-        | ((rgA) << RVM_RGAPOS)   \
-        | ((rgB) << RVM_RGBPOS))    /* Encodes I-type instructions. */
-#define RVM_ETYPR(op, f11, rgA, rgB, rgC) \
-  ((op) | ((f11) << RVM_FNPOS)    \
+/* rvm instruction encoding helper. */
+#define RVM_INENC(op, fnc, rgA, rgB, rgC) \
+  ((op) | ((fnc) << RVM_FNPOS)    \
         | ((rgA) << RVM_RGAPOS)   \
         | ((rgB) << RVM_RGBPOS)   \
-        | ((rgC) << RVM_RGCPOS))    /* Encodes R-type instructions. */
+        | ((rgC) << RVM_RGCPOS))    /* Encodes any type of instruction. */
 
 /* rvm status codes. */
 #define RVM_EOK          0    /* Ok */

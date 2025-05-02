@@ -64,13 +64,15 @@ const char *rvm_stropc(int opc)
 
 
 /* Instruction that triggers a memory fault. */
-#define __TRAP_EMEMV RVM_ETYPJ(RVM_OP_trap, RVM_EMEMV)
+#define __TRAP_EMEMV RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
 
+/* Convinience shortcuts. */
 #define rgA reg[RVM_RGA(inst)]
 #define rgB reg[RVM_RGB(inst)]
 #define rgC reg[RVM_RGC(inst)]
 #define fnc     RVM_FNC(inst)
 
+/* Execution helper macros. */
 #define vmsave     do { \
     ctx->cf = cf;       \
     ctx->pc = pc;       \
