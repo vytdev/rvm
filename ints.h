@@ -55,7 +55,7 @@ typedef unsigned __int16    rvm_u16;
 typedef          __int8     rvm_i8;
 typedef unsigned __int8     rvm_u8;
 
-#elif defined(__GNUC__) || defined(__clang__)
+#elif (defined(__GNUC__) && !defined(__STRICT_ANSI__)) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlong-long"
 

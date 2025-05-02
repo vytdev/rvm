@@ -109,17 +109,42 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 # pragma GCC diagnostic pop
 # endif
 
-  /* Switch dispatch. */
-_loop:
-  switch (RVM_OPC(vmfetch())) {
-# define vmnext goto _loop
-# define DEF(op) case (RVM_OP_##op):
-# include "impl.h"
-# undef DEF
-  default: return RVM_EUINST;
-  }
 
-  /* TODO: compile with goto dispatch, if available. */
+/* Use computed gotos if available. */
+#if RVM_CFG_PREFER_COMP_GOTOS && (defined(__GNUC__) && \
+    !defined(__STRICT_ANSI__))
+# define vmnext goto *((_target = _disptab[RVM_OPC(vmfetch())]) \
+   ? _target : &&_notimpl)
+
+  void *_target;
+  static void * RVM_RESTRICT _disptab[RVM_OPNUM];
+
+  # define DEF(op, idx) _disptab[(idx)] = (&&_H_##op);
+  # include "opcodes.h"
+  # undef DEF
+
+  /* Implementation. */
+  #define DEF(op) _H_##op :
+  #include "impl.h"
+  #undef DEF
 
   return RVM_ERR;
+  _notimpl:
+  return RVM_EUINST;
+
+
+/* Fallback to switch dispatch. */
+#else
+# define vmnext goto _loop
+
+  _loop:
+  switch (RVM_OPC(vmfetch())) {
+  # define DEF(op) case (RVM_OP_##op):
+  # include "impl.h"
+  # undef DEF
+  default: return RVM_EUINST;
+  }
+  return RVM_ERR;
+
+#endif
 }

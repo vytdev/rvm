@@ -45,6 +45,12 @@
  */
 #define RVM_CFG_SPECIFY_64_BIT_SYS      RVM_AUTO
 
+/*
+ * Specify whether to prefer using a threaded dispatch if the compiler
+ * supports. Allowed vals: RVM_TRUE, RVM_FALSE.
+ */
+#define RVM_CFG_PREFER_COMP_GOTOS       RVM_TRUE
+
 
 /* Detect whether we're on a 64-bit system. */
 #if RVM_CFG_SPECIFY_64_BIT_SYS == RVM_TRUE || \
@@ -74,7 +80,7 @@
 /* Restrict keyword. */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #  define RVM_RESTRICT   restrict
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #  define RVM_RESTRICT   __restrict__
 #elif defined(_MSC_VER)
 #  define RVM_RESTRICT   __restrict
