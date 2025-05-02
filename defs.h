@@ -94,5 +94,6 @@
 /* rvm status codes. */
 #define RVM_EOK          0    /* Ok */
 #define RVM_ERR          1    /* Error */
+#define RVM_EHOST        32   /* Host defined (>32) */
 
 #endif /* defs.h */

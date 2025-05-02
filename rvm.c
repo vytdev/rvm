@@ -35,7 +35,21 @@ struct rvm rvm_new(char *mem, rvm_uint memsz)
   return ctx;
 }
 
-rvm_stat_t rvm_exec(struct rvm *RVM_RESTRICT ctx)
+const char *rvm_statstr(signed e)
+{
+  if (e < 0)
+    e = -e;
+  if (e >= RVM_EHOST)
+    return "<host>";
+  /* RVM defined exception codes. */
+  switch (e) {
+  case RVM_EOK:       return "Ok";
+  case RVM_ERR:       return "Error";
+  default:            return "<reserved>";
+  }
+}
+
+signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 {
   rvm_reg_t    pc;
   rvm_inst_t  *code;

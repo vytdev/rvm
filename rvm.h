@@ -37,7 +37,6 @@
 
 typedef rvm_u64 rvm_reg_t;   /* Type for a register. */
 typedef rvm_u32 rvm_inst_t;  /* Type for an instruction. */
-typedef rvm_i32 rvm_stat_t;  /* Status codes. */
 
 /*
  * rvm execution context.
@@ -62,9 +61,14 @@ extern "C" {
 struct rvm rvm_new(char *mem, rvm_uint memsz);
 
 /*
+ * Returns a C-string explaining the given stat code `e`.
+ */
+const char *rvm_statstr(signed e);
+
+/*
  * Execute rvm ctx until an exception occurs.
  */
-rvm_stat_t rvm_exec(struct rvm *RVM_RESTRICT ctx);
+signed rvm_exec(struct rvm *RVM_RESTRICT ctx);
 
 #if defined(__cplusplus)
 } /* extern "C" */
