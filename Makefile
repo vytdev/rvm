@@ -5,11 +5,15 @@ CC=        gcc
 RM=        rm -rf
 
 STD=       gnu99
-CFLAGS=    -Wall -Wextra -pedantic
+CFLAGS=    -Wall -Wextra
 CFLAGS+=   $(MYCFLAGS) -std=$(STD)
 
 SRC=       rvm.c
 OBJ=       $(SRC:.c=.o)
+
+ifneq ($(P),)
+  CFLAGS+= -pedantic -ansi
+endif
 
 default: release
 
@@ -40,5 +44,6 @@ help:
 	@echo "  CC=...         C compiler to use. (default: $(CC))"
 	@echo "  RM=...         Command to remove files. (default: $(RM))"
 	@echo "  STD=...        Specify the standard. (default: $(STD))"
+	@echo "  P=1            Force standard conformance."
 
 .PHONY: default build release debug clean help
