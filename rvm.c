@@ -18,6 +18,7 @@
 
 #include "config.h"
 #include "defs.h"
+#include "ints.h"
 #include "rvm.h"
 
 
@@ -45,6 +46,8 @@ const char *rvm_strstat(signed e)
   switch (e) {
   case RVM_EOK:       return "Ok";
   case RVM_ERR:       return "Error";
+  case RVM_EUINST:    return "Illegal instruction";
+  case RVM_EMEMV:     return "Memory fault";
   default:            return "<reserved>";
   }
 }
@@ -52,25 +55,61 @@ const char *rvm_strstat(signed e)
 const char *rvm_stropc(int opc)
 {
   switch (opc) {
-# define DEF(op, idx) case (RVM_OP##op): return (#op);
+# define DEF(op, idx) case (RVM_OP_##op): return (#op);
 # include "opcodes.h"
 # undef DEF
   default: return "<unknown>";
   }
 }
 
+
+/* Instruction that triggers a memory fault. */
+#define __TRAP_EMEMV RVM_ETYPJ(RVM_OP_trap, RVM_EMEMV)
+
+#define rgA reg[RVM_RGA(inst)]
+#define rgB reg[RVM_RGB(inst)]
+#define rgC reg[RVM_RGC(inst)]
+#define fnc     RVM_FNC(inst)
+
+#define vmsave     do { \
+    ctx->cf = cf;       \
+    ctx->pc = pc;       \
+  } while (0)
+#define vmbrk      vmsave; return
+#define vmfetch()  (inst = codesz > pc ? code[pc++] : __TRAP_EMEMV)
+
 signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 {
-  rvm_reg_t    pc;
-  rvm_inst_t  *code;
-  rvm_uint     codesz;
-  rvm_inst_t   inst;
+# if defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-variable"
+# endif
 
-  pc = ctx->pc;
-  code = (rvm_inst_t*)(void*)ctx->mem;
-  codesz = ctx->memsz / RVM_INLN;
+  int                  const opts    = ctx->exec_opts;
+  char               * const mem     = ctx->mem;
+  rvm_uint             const memsz   = ctx->memsz;
+  rvm_reg_t          * const reg     = ctx->reg;
+  rvm_inst_t const   * const code    = (rvm_inst_t*)(void*)mem;
+  rvm_uint             const codesz  = memsz / RVM_INLN;
+  int                        cf      = ctx->cf;
+  rvm_reg_t                  pc      = ctx->pc;
+  rvm_inst_t                 inst;
 
-  /* TODO: implementation. */
+# if defined(__GNUC__)
+# pragma GCC diagnostic pop
+# endif
 
-  return RVM_EOK;
+  /* Switch dispatch. */
+_loop:
+  switch (RVM_OPC(vmfetch())) {
+# define vmnext goto _loop
+# define DEF(op) case (RVM_OP_##op):
+# include "impl.h"
+# undef DEF
+  default: return RVM_EUINST;
+  }
+
+  /* TODO: compile with goto dispatch, if available. */
+
+  return RVM_ERR;
 }

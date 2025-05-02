@@ -18,8 +18,17 @@
 
 #if defined(DEF)
 
-DEF(nop,   0)   /* [*] No-op */
-DEF(mov,   1)   /* [M] Move across regs */
-DEF(trap,  2)   /* [J] Trigger an exception */
+DEF(nop) {
+  vmnext;
+}
 
-#endif /* opcodes.h */
+DEF(mov) {
+  rgA = rgB;
+  vmnext;
+}
+
+DEF(trap) {
+  vmbrk fnc & 0xff;
+}
+
+#endif /* impl.h */
