@@ -28,8 +28,8 @@ static void dump_benchmark(struct rvm *ctx, tstamp elapsed)
   double avg_tpi = (double)elapsed / ctx->inst_cnt;
   double instr_rate = BILLION / avg_tpi;
   printf("[benchmarking metrics]\n");
-  printf("  elapsed time:    %"PRIu64" ns\n",    elapsed);
-  printf("  instr count:     %"PRIu64" insts\n", ctx->inst_cnt);
+  printf("  elapsed time:    %" PRIu64 " ns\n",    elapsed);
+  printf("  instr count:     %" PRIu64 " insts\n", ctx->inst_cnt);
   printf("  avg tpi:         %.3lf ns\n",        avg_tpi);
   printf("  instr rate:      %.3lf ips\n",       instr_rate);
 }
@@ -47,7 +47,7 @@ static void dump_state(struct rvm *ctx, signed stat)
   printf("  impl ver   %u\n",    RVM_IMPL);
   printf("  ver num    %lu\n",   RVM_VERSION);
 # define prnt_reg(name, rg) \
-  printf("  %-5s  0x%016"PRIx64"  % "PRIi64"\n", #name, rg, rg);
+  printf("  %-5s  0x%016" PRIx64 "  % " PRIi64 "\n", #name, rg, rg);
   prnt_reg(<pc>,  ctx->pc);
   prnt_reg(<cf>,  (rvm_reg_t)ctx->cf);
   prnt_reg(r0,  ctx->reg[RVM_R0]);
