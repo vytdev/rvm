@@ -19,6 +19,8 @@
 #ifndef RVM_UTILS_H_
 #define RVM_UTILS_H_  1
 
+#include "config.h"
+
 #define RVM_STR1(x)   #x
 #define RVM_STR2(x)   RVM_STR1(x)
 
@@ -29,10 +31,17 @@
 #define RVM_SGXTD(x, b) (((x)^(1<<((b)-1)))-(1<<((b)-1)))
 
 #define RVM_BSWAP32(v) \
-  (((v >> 24) & 0x000000ff) | \
-   ((v >> 8 ) & 0x0000ff00) | \
-   ((v << 8 ) & 0x00ff0000) | \
-   ((v << 24) & 0xff000000))
+  (((((v) & 0xff000000) >> 24) & 0x000000ff) | \
+   ((((v) & 0x00ff0000) >> 8 ) & 0x0000ff00) | \
+   ((((v) & 0x0000ff00) << 8 ) & 0x00ff0000) | \
+   ((((v) & 0x000000ff) << 24) & 0xff000000))
+
+/* Only bswap on big endian sys */
+#if RVM_BORD == RVM_BORD_BIG
+#define RVM_BSWP32BE(v)  RVM_BSWAP32((v))
+#else
+#define RVM_BSWP32BE(v)  (v)
+#endif
 
 #if defined(__GNUC__)
 #define RVM_LIKELY(x)    (__builtin_expect(((x) != 0), 1))

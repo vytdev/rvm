@@ -70,7 +70,7 @@ const char *rvm_stropc(int opc)
 /* Instruction that triggers a memory fault. */
 #define __RVM_TRAP_EMEMV    RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
 #define __RVM_FETCH()       (RVM_LIKELY(codesz > pc) \
-                            ? code[pc++] : __RVM_TRAP_EMEMV)
+                            ? code[pc++] : RVM_BSWP32BE(__RVM_TRAP_EMEMV))
 
 #define __RVM_SAVECF()     (ctx->cf = cf)
 #define __RVM_SAVEPC()     (ctx->pc = pc)
@@ -100,11 +100,7 @@ const char *rvm_stropc(int opc)
 #define vmbrk      vmsave(); return
 
 /* Do byte-swap on big endian systems. */
-#if RVM_BORD == RVM_BORD_BIG
-#  define vmfetch()  (inst = RVM_BSWAP32(__RVM_FETCH()))
-#else
-#  define vmfetch()  (inst = __RVM_FETCH())
-#endif
+#define vmfetch()  (inst = __RVM_FETCH(), inst = RVM_BSWP32BE(inst))
 
 
 signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
