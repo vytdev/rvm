@@ -109,11 +109,6 @@ const char *rvm_stropc(int opc)
 
 signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 {
-# if defined(__GNUC__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-variable"
-# endif
-
   int                  const opts    = ctx->exec_opts;
   char               * const mem     = ctx->mem;
   rvm_uint             const memsz   = ctx->memsz;
@@ -125,10 +120,6 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   rvm_inst_t                 inst;
 # if RVM_CFG_COUNT_INSTRS_EXEC
   rvm_u64                    icnt    = ctx->inst_cnt;
-# endif
-
-# if defined(__GNUC__)
-# pragma GCC diagnostic pop
 # endif
 
 
@@ -144,6 +135,8 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   # define DEF(op, idx) _disptab[(idx)] = (&&_H_##op);
   # include "opcodes.h"
   # undef DEF
+
+  vmnext;
 
   /* Implementation. */
   #define DEF(op) _H_##op :
