@@ -31,4 +31,9 @@ DEF(trap) {
   vmbrk -(fnc & 0xff);
 }
 
+DEF(ldim) {
+  rgA = fnc & RVM_F19MASK;
+  vmnext;
+}
+
 #endif /* impl.h */
