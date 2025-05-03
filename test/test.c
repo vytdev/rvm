@@ -48,7 +48,7 @@ static void dump_state(struct rvm *ctx, signed stat)
   printf("  ver num    %lu\n",   RVM_VERSION);
 # define prnt_reg(name, rg) \
   printf("  %-5s  0x%016"PRIx64"  % "PRIi64"\n", #name, rg, rg);
-  prnt_reg(<pc>,  ctx->pc << 2);
+  prnt_reg(<pc>,  ctx->pc);
   prnt_reg(<cf>,  (rvm_reg_t)ctx->cf);
   prnt_reg(r0,  ctx->reg[RVM_R0]);
   prnt_reg(r1,  ctx->reg[RVM_R1]);
