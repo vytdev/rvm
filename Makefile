@@ -29,14 +29,20 @@ debug:   CFLAGS+= -g -DRVM_DBG_
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+test/test.o: STD= c99
+test/test: test/test.o $(OBJ)
+	$(CC) -o $@ $^
+test: release test/test
+
 clean:
-	$(RM) $(OBJ)
+	$(RM) $(OBJ) test/test test/test.o
 
 help:
 	@echo "RVM Makefile"
 	@echo "  build       Build with default flags."
 	@echo "  release     Build for release."
 	@echo "  debug       Build for debugging."
+	@echo "  test        Compile testing loader."
 	@echo "  clean       Remove output files."
 	@echo "  help        Show this help."
 	@echo "Customisation:"
@@ -46,4 +52,4 @@ help:
 	@echo "  STD=...        Specify the standard. (default: $(STD))"
 	@echo "  P=1            Force standard conformance."
 
-.PHONY: default build release debug clean help
+.PHONY: default build release debug test clean help

@@ -28,7 +28,7 @@ DEF(mov) {
 }
 
 DEF(trap) {
-  vmbrk fnc & 0xff;
+  vmbrk -(fnc & 0xff);
 }
 
 #endif /* impl.h */
