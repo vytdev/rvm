@@ -40,7 +40,7 @@ static void dump_benchmark(struct rvm *ctx, tstamp elapsed)
 
 static void dump_state(struct rvm *ctx, signed stat)
 {
-  printf("vm fault [%d]: %s\n", stat, rvm_strstat(stat));
+  printf("vm ended [%d]: %s\n", stat, rvm_strstat(stat));
   printf("  memsz      %zu bytes\n", ctx->memsz);
   printf("  exec opt   0x%04x\n",    ctx->exec_opts);
   printf("  arch ver   %u\n",    RVM_ARCH);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
   if (argc != 2) {
     fprintf(stderr, ""
       "usage: %s path\n"
-      RVM_LABEL ": Loads and executes the p-code image at 'path'.\n"
+      RVM_LABEL ": Loads and executes 'path'.\n"
       RVM_COPYRIGHT "\n"
       , argv[0]
     );
@@ -138,21 +138,19 @@ int main(int argc, char **argv)
   char *mem = load_file(argv[1], &memsz, argv[0]);
   if (!mem)
     return 1;
-
   struct rvm ctx = rvm_new(mem, memsz);
   ctx.pc = 0;
-  signed stat = RVM_EOK;
 
   #if defined(BENCH_)
   tstamp start = get_tstamp();
   #endif
 
-  while (stat == RVM_EOK)
-    stat = rvm_exec(&ctx);
+  signed stat = rvm_exec(&ctx);
 
   #if defined(BENCH_)
   dump_benchmark(&ctx, get_tstamp() - start);
   #endif
   dump_state(&ctx, stat);
+
   return stat;
 }
