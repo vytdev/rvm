@@ -48,6 +48,9 @@ struct rvm {
   int         cf;      /* Condition flags. */
   rvm_reg_t   pc;      /* Program counter. */
   rvm_reg_t   reg[RVM_REGCNT];    /* GPRs. */
+#if RVM_CFG_COUNT_INSTRS_EXEC
+  rvm_u64     inst_cnt;  /* Number of instructions. */
+#endif
 };
 
 

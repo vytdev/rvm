@@ -51,6 +51,12 @@
  */
 #define RVM_CFG_PREFER_COMP_GOTOS       RVM_TRUE
 
+/*
+ * Enable counting of the instructions executed. Allowed vals: RVM_TRUE,
+ * RVM_FALSE.
+ */
+#define RVM_CFG_COUNT_INSTRS_EXEC       RVM_TRUE
+
 
 /* Detect whether we're on a 64-bit system. */
 #if RVM_CFG_SPECIFY_64_BIT_SYS == RVM_TRUE || \

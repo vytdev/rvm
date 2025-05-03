@@ -29,7 +29,6 @@ debug:   CFLAGS+= -g -DRVM_DBG_
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-test/test.o: STD= c99
 test/test: test/test.o $(OBJ)
 	$(CC) -o $@ $^
 test: release test/test

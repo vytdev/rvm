@@ -3,6 +3,73 @@
 #include <stdlib.h>
 #include "../rvm.h"
 
+#if defined(__linux__) || defined(__unix) || defined(__unix__)
+#  include <unistd.h>
+#  if RVM_CFG_COUNT_INSTRS_EXEC && (_POSIX_VERSION >= 200112L)
+#    define BENCH_
+#    include <time.h>
+#    if defined(CLOCK_MONOTONIC)
+#      define CLOCK_USED  CLOCK_MONOTONIC
+#    else
+#      define CLOCK_USED  CLOCK_REALTIME
+#    endif
+#    define BILLION (1000 * 1000 * 1000)
+
+typedef rvm_u64 tstamp;
+static inline tstamp get_tstamp(void)
+{
+  struct timespec ts;
+  clock_gettime(CLOCK_USED, &ts);
+  return (tstamp)ts.tv_sec * BILLION + ts.tv_nsec;
+}
+
+static void dump_benchmark(struct rvm *ctx, tstamp elapsed)
+{
+  double avg_tpi = (double)elapsed / ctx->inst_cnt;
+  double instr_rate = BILLION / avg_tpi;
+  printf("[benchmarking metrics]\n");
+  printf("  elapsed time:    %"PRIu64" ns\n",    elapsed);
+  printf("  instr count:     %"PRIu64" insts\n", ctx->inst_cnt);
+  printf("  avg tpi:         %.3lf ns\n",        avg_tpi);
+  printf("  instr rate:      %.3lf ips\n",       instr_rate);
+}
+
+#  endif
+#endif
+
+
+static void dump_state(struct rvm *ctx, signed stat)
+{
+  printf("vm fault [%d]: %s\n", stat, rvm_strstat(stat));
+  printf("  memsz      %zu bytes\n", ctx->memsz);
+  printf("  exec opt   0x%04x\n",    ctx->exec_opts);
+  printf("  arch ver   %u\n",    RVM_ARCH);
+  printf("  impl ver   %u\n",    RVM_IMPL);
+  printf("  ver num    %lu\n",   RVM_VERSION);
+# define prnt_reg(name, rg) \
+  printf("  %-5s  0x%016"PRIx64"  % "PRIi64"\n", #name, rg, rg);
+  prnt_reg(<pc>,  ctx->pc << 2);
+  prnt_reg(<cf>,  (rvm_reg_t)ctx->cf);
+  prnt_reg(r0,  ctx->reg[RVM_R0]);
+  prnt_reg(r1,  ctx->reg[RVM_R1]);
+  prnt_reg(r2,  ctx->reg[RVM_R2]);
+  prnt_reg(r3,  ctx->reg[RVM_R3]);
+  prnt_reg(r4,  ctx->reg[RVM_R4]);
+  prnt_reg(r5,  ctx->reg[RVM_R5]);
+  prnt_reg(r6,  ctx->reg[RVM_R6]);
+  prnt_reg(r7,  ctx->reg[RVM_R7]);
+  prnt_reg(r8,  ctx->reg[RVM_R8]);
+  prnt_reg(r9,  ctx->reg[RVM_R9]);
+  prnt_reg(r10, ctx->reg[RVM_R10]);
+  prnt_reg(r11, ctx->reg[RVM_R11]);
+  prnt_reg(r12, ctx->reg[RVM_R12]);
+  prnt_reg(r13, ctx->reg[RVM_R13]);
+  prnt_reg(r14, ctx->reg[RVM_R14]);
+  prnt_reg(r15, ctx->reg[RVM_R15]);
+# undef prnt_reg
+  puts(RVM_LABEL);
+}
+
 
 static char *load_file(const char *path, rvm_uint *memsz,
                        const char *progname)
@@ -55,39 +122,6 @@ static char *load_file(const char *path, rvm_uint *memsz,
 }
 
 
-static void dump_state(struct rvm *ctx, signed stat)
-{
-  printf("vm fault [%d]: %s\n", stat, rvm_strstat(stat));
-  printf("  memsz      %zu bytes\n", ctx->memsz);
-  printf("  exec opt   0x%04x\n",    ctx->exec_opts);
-  printf("  arch ver   %u\n",    RVM_ARCH);
-  printf("  impl ver   %u\n",    RVM_IMPL);
-  printf("  ver num    %lu\n",   RVM_VERSION);
-# define prnt_reg(name, rg) \
-  printf("  %-5s  0x%016"PRIx64"  % "PRIi64"\n", #name, rg, rg);
-  prnt_reg(<pc>,  ctx->pc << 2);
-  prnt_reg(<cf>,  (rvm_reg_t)ctx->cf);
-  prnt_reg(r0,  ctx->reg[RVM_R0]);
-  prnt_reg(r1,  ctx->reg[RVM_R1]);
-  prnt_reg(r2,  ctx->reg[RVM_R2]);
-  prnt_reg(r3,  ctx->reg[RVM_R3]);
-  prnt_reg(r4,  ctx->reg[RVM_R4]);
-  prnt_reg(r5,  ctx->reg[RVM_R5]);
-  prnt_reg(r6,  ctx->reg[RVM_R6]);
-  prnt_reg(r7,  ctx->reg[RVM_R7]);
-  prnt_reg(r8,  ctx->reg[RVM_R8]);
-  prnt_reg(r9,  ctx->reg[RVM_R9]);
-  prnt_reg(r10, ctx->reg[RVM_R10]);
-  prnt_reg(r11, ctx->reg[RVM_R11]);
-  prnt_reg(r12, ctx->reg[RVM_R12]);
-  prnt_reg(r13, ctx->reg[RVM_R13]);
-  prnt_reg(r14, ctx->reg[RVM_R14]);
-  prnt_reg(r15, ctx->reg[RVM_R15]);
-# undef prnt_reg
-  puts(RVM_LABEL);
-}
-
-
 int main(int argc, char **argv)
 {
   if (argc != 2) {
@@ -107,11 +141,18 @@ int main(int argc, char **argv)
 
   struct rvm ctx = rvm_new(mem, memsz);
   ctx.pc = 0;
-
   signed stat = RVM_EOK;
+
+  #if defined(BENCH_)
+  tstamp start = get_tstamp();
+  #endif
+
   while (stat == RVM_EOK)
     stat = rvm_exec(&ctx);
 
+  #if defined(BENCH_)
+  dump_benchmark(&ctx, get_tstamp() - start);
+  #endif
   dump_state(&ctx, stat);
   return stat;
 }
