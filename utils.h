@@ -20,6 +20,7 @@
 #define RVM_UTILS_H_  1
 
 #include "config.h"
+#include "ints.h"
 
 #define RVM_STR1(x)   #x
 #define RVM_STR2(x)   RVM_STR1(x)
@@ -28,7 +29,7 @@
 #define RVM_SIGNEDMAX(n)   ((1<<((n)-1))-1)  /* 2^(n-1) - 1 */
 #define RVM_UNSIGNEDMAX(n) ((1<<(n))-1)      /* 2^n - 1 */
 
-#define RVM_SGXTD(x, b) (((x)^(1<<((b)-1)))-(1<<((b)-1)))
+#define RVM_SGXTD(x, b) (((x)^((rvm_u64)1<<((b)-1)))-((rvm_u64)1<<((b)-1)))
 
 #define RVM_BSWAP32(v) \
   (((((v) & 0xff000000) >> 24) & 0x000000ff) | \

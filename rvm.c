@@ -21,6 +21,7 @@
 #include "defs.h"
 #include "ints.h"
 #include "rvm.h"
+#include "utils.h"
 
 
 struct rvm rvm_new(char *mem, rvm_uint memsz)

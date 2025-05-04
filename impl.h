@@ -31,8 +31,8 @@ DEF(trap) {
   vmbrk -(fnc & 0xff);
 }
 
-DEF(ldim) {
-  rgA = fnc & RVM_F19MASK;
+DEF(li) {
+  rgA = RVM_SGXTD(fnc & RVM_F19MASK, 19);
   vmnext;
 }
 
