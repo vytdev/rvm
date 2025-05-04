@@ -36,4 +36,9 @@ DEF(li) {
   vmnext;
 }
 
+DEF(j) {
+  pc += RVM_SGXTD(fnc, 23);
+  vmnext;
+}
+
 #endif /* impl.h */

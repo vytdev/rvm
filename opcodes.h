@@ -22,5 +22,6 @@ DEF(nop,   0)   /* [*] No-op */
 DEF(mov,   1)   /* [M] Move across regs */
 DEF(trap,  2)   /* [J] Trigger an exception */
 DEF(li,    3)   /* [M] Load fn19 to rgA, sign extended */
+DEF(j,     4)   /* [J] Uncond. pc-rel jump */
 
 #endif /* opcodes.h */
