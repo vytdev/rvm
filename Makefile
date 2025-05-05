@@ -29,6 +29,7 @@ debug:   CFLAGS+= -g -DRVM_DBG_
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+test/test.o: CFLAGS= -std=gnu99 -Wall -Wextra
 test/test: test/test.o $(OBJ)
 	$(CC) -o $@ $^
 test: release test/test

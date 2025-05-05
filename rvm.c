@@ -24,10 +24,17 @@
 #include "utils.h"
 
 
-struct rvm rvm_new(char *mem, rvm_uint memsz)
+struct rvm rvm_new(void *mem, rvm_uint memsz)
 {
   struct rvm ctx;
   int i;
+  char *m;
+  /* Patch the mem. */
+  m = (char*)mem;
+  memsz &= ~(RVM_INWD-1);
+  memsz -= RVM_INWD;
+  RVM_ENC32(RVM_TRAP_EMEMV, &m[memsz]);
+  /* Setup ctx. */
   ctx.exec_opts = 0;
   ctx.mem = mem;
   ctx.memsz = memsz;
@@ -39,6 +46,12 @@ struct rvm rvm_new(char *mem, rvm_uint memsz)
   ctx.inst_cnt = 0;
 # endif
   return ctx;
+}
+
+rvm_uint rvm_calcfmem(rvm_uint sz)
+{
+  /* align up + trap instruction */
+  return (sz + (RVM_INWD << 1) - 1) & ~(RVM_INWD - 1);
 }
 
 const char *rvm_strstat(signed e)
@@ -68,25 +81,6 @@ const char *rvm_stropc(int opc)
 }
 
 
-/* Instruction that triggers a memory fault. */
-#define __RVM_TRAP_EMEMV    RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
-#define __RVM_FETCH()       (RVM_LIKELY(codesz > pc) \
-    ? (pc++, RVM_DEC32(&mem[(pc-1) << 2]))  \
-    : __RVM_TRAP_EMEMV)
-
-#define __RVM_SAVECF()     (ctx->cf = cf)
-#define __RVM_SAVEPC()     (ctx->pc = pc << 2)
-#if RVM_CFG_COUNT_INSTRS_EXEC
-#  define __RVM_SAVEICNT()   (ctx->inst_cnt = icnt)
-#else
-#  define __RVM_SAVEICNT()   (0)
-#endif
-
-#if RVM_CFG_COUNT_INSTRS_EXEC
-#  define __RVM_JMPNEXT   icnt++; goto
-#else
-#  define __RVM_JMPNEXT   goto
-#endif
 
 /* Convinience shortcuts. */
 #define rgA reg[RVM_RGA(inst)]
@@ -94,21 +88,32 @@ const char *rvm_stropc(int opc)
 #define rgC reg[RVM_RGC(inst)]
 #define fnc     RVM_FNC(inst)
 
-/* Execution helper macros. */
-#define vmsave() (    \
-    __RVM_SAVECF(),   \
-    __RVM_SAVEPC(),   \
+/* Saving vm state. */
+#if RVM_CFG_COUNT_INSTRS_EXEC
+#  define __RVM_SAVEICNT()   (ctx->inst_cnt = icnt)
+#else
+#  define __RVM_SAVEICNT()   (0)
+#endif
+#define vmsave() (     \
+    ctx->cf = cf,      \
+    ctx->pc = pc << 2, \
     __RVM_SAVEICNT())
-#define vmbrk      vmsave(); return
 
-/* Do byte-swap on big endian systems. */
-#define vmfetch()  (inst = __RVM_FETCH())
+#define vmfetch()  (inst = RVM_DEC32(&mem[(pc++) << 2]))
+
+#if RVM_CFG_COUNT_INSTRS_EXEC
+#  define __RVM_JMPNEXT   icnt++; goto
+#else
+#  define __RVM_JMPNEXT   goto
+#endif
+#define vmnext     vmfetch(); __RVM_DISPATCH
+#define vmbrk      vmsave(); return
 
 
 signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 {
   int                  const opts    = ctx->exec_opts;
-  char               * const mem     = ctx->mem;
+  char               * const mem     = (char * const)ctx->mem;
   rvm_uint             const memsz   = ctx->memsz;
   rvm_reg_t          * const reg     = ctx->reg;
   rvm_uint             const codesz  = memsz >> 2;
@@ -123,7 +128,7 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 /* Use computed gotos if available. */
 #if RVM_CFG_PREFER_COMP_GOTOS && (defined(__GNUC__) && \
     !defined(__STRICT_ANSI__))
-# define vmnext __RVM_JMPNEXT *_disptab[RVM_OPC(vmfetch())]
+# define __RVM_DISPATCH __RVM_JMPNEXT *_disptab[RVM_OPC(inst)]
 
   static void * RVM_RESTRICT _disptab[RVM_OPNUM];
   for (int i = 0; i < RVM_OPNUM; i++)
@@ -147,10 +152,11 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 
 /* Fallback to switch dispatch. */
 #else
-# define vmnext __RVM_JMPNEXT _loop
+# define __RVM_DISPATCH __RVM_JMPNEXT _loop
 
+  vmnext;
   _loop:
-  switch (RVM_OPC(vmfetch())) {
+  switch (RVM_OPC(inst)) {
   # define DEF(op) case (RVM_OP_##op):
   # include "impl.h"
   # undef DEF

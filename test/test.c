@@ -93,7 +93,9 @@ static char *load_file(const char *path, rvm_uint *memsz,
   rvm_uint sz = ftell(fp);
   fseek(fp, 0, SEEK_SET);
 
-  char *mem = (char*)malloc(sz);
+  rvm_uint reqmem = rvm_calcfmem(sz);
+
+  char *mem = (char*)malloc(reqmem);
   if (!mem) {
     fprintf(stderr, ""
        "%s: Failed to allocate memory with size: %zu bytes\n",
@@ -124,7 +126,7 @@ static char *load_file(const char *path, rvm_uint *memsz,
 
   fclose(fp);
   if (memsz)
-    *memsz = sz;
+    *memsz = reqmem;
   return mem;
 }
 

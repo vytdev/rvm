@@ -22,6 +22,12 @@
   (((a) == (b))                  << RVM_FEQBP) | \
   (((rvm_u64)(a) > (rvm_u64)(b)) << RVM_FABBP) | \
   (((rvm_i64)(a) > (rvm_i64)(b)) << RVM_FGTBP) );
+#define util_checkpc() do {   \
+    if (pc >= codesz) {       \
+      inst = RVM_TRAP_EMEMV;  \
+      __RVM_DISPATCH;         \
+    } \
+  } while (0)
 
 DEF(nop) {
   vmnext;
@@ -43,6 +49,7 @@ DEF(li) {
 
 DEF(j) {
   pc += RVM_SGXTD(fnc, 23);
+  util_checkpc();
   vmnext;
 }
 

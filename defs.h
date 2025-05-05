@@ -101,4 +101,7 @@ enum rvm_opcode {
 RVM_OP__ignore /* C89 doesn't allow trailing comma. */
 };
 
+/* Instruction that triggers a mem fault. */
+#define RVM_TRAP_EMEMV  RVM_INENC(RVM_OP_trap, RVM_EMEMV, 0, 0, 0)
+
 #endif /* defs.h */

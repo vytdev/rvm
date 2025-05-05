@@ -43,7 +43,7 @@ typedef rvm_u32 rvm_inst_t;  /* Type for an instruction. */
  */
 struct rvm {
   int         exec_opts;  /* Exec options. */
-  char       *mem;     /* Ptr to contiguous mem. */
+  void       *mem;     /* Ptr to contiguous mem. */
   rvm_uint    memsz;   /* How much mem we have. */
   int         cf;      /* Condition flags. */
   rvm_reg_t   pc;      /* Program counter. */
@@ -61,7 +61,12 @@ extern "C" {
 /*
  * Creates a new rvm exec context with a contiguous `mem` of size `memsz`.
  */
-struct rvm rvm_new(char *mem, rvm_uint memsz);
+struct rvm rvm_new(void *mem, rvm_uint memsz);
+
+/*
+ * Calculate the final mem size needed for allocation.
+ */
+rvm_uint rvm_calcfmem(rvm_uint sz);
 
 /*
  * Returns a C-string explaining the given stat code `e`.
