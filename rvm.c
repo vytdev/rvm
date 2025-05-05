@@ -31,8 +31,8 @@ struct rvm rvm_new(void *mem, rvm_uint memsz)
   char *m;
   /* Patch the mem. */
   m = (char*)mem;
-  memsz &= ~(RVM_INWD-1);
-  memsz -= RVM_INWD;
+  memsz &= ~(RVM_INLN-1);
+  memsz -= RVM_INLN;
   RVM_ENC32(RVM_TRAP_EMEMV, &m[memsz]);
   /* Setup ctx. */
   ctx.exec_opts = 0;
@@ -51,7 +51,7 @@ struct rvm rvm_new(void *mem, rvm_uint memsz)
 rvm_uint rvm_calcfmem(rvm_uint sz)
 {
   /* align up + trap instruction */
-  return (sz + (RVM_INWD << 1) - 1) & ~(RVM_INWD - 1);
+  return (sz + (RVM_INLN << 1) - 1) & ~(RVM_INLN - 1);
 }
 
 const char *rvm_strstat(signed e)
