@@ -41,9 +41,14 @@
 #define RVM_REGCNT   16      /* rvm register count. Must match RVM_RGNUM. */
 
 /* Condition flags. */
-#define RVM_FEQ  (1<<0)  /* Equal flag. */
-#define RVM_FAB  (1<<1)  /* Above (unsigned >) flag. */
-#define RVM_FGT  (1<<2)  /* Greater (signed >) flag. */
+#define RVM_FEQBP   0
+#define RVM_FEQ  (1<<RVM_FEQBP)  /* Equal flag. */
+
+#define RVM_FABBP   1
+#define RVM_FAB  (1<<RVM_FABBP)  /* Above (unsigned >) flag. */
+
+#define RVM_FGTBP   2
+#define RVM_FGT  (1<<RVM_FGTBP)  /* Greater (signed >) flag. */
 
 
 /* rvm instruction format constants. */

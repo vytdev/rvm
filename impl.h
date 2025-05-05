@@ -18,6 +18,11 @@
 
 #if defined(DEF)
 
+#define util_icmp(a, b) ( \
+  (((a) == (b))                  << RVM_FEQBP) | \
+  (((rvm_u64)(a) > (rvm_u64)(b)) << RVM_FABBP) | \
+  (((rvm_i64)(a) > (rvm_i64)(b)) << RVM_FGTBP) );
+
 DEF(nop) {
   vmnext;
 }
@@ -38,6 +43,17 @@ DEF(li) {
 
 DEF(j) {
   pc += RVM_SGXTD(fnc, 23);
+  vmnext;
+}
+
+DEF(cmp) {
+  cf = util_icmp(rgA, rgB);
+  vmnext;
+}
+
+DEF(cmpi) {
+  rvm_reg_t imm = RVM_SGXTD(fnc & RVM_F19MASK, 19);
+  cf = util_icmp(rgA, imm);
   vmnext;
 }
 

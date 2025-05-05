@@ -47,9 +47,16 @@ static void dump_state(struct rvm *ctx, signed stat)
   printf("  impl ver   %u\n",    RVM_IMPL);
   printf("  ver num    %lu\n",   RVM_VERSION);
 # define prnt_reg(name, rg) \
-  printf("  %-5s  0x%016" PRIx64 "  % " PRIi64 "\n", #name, rg, rg);
+  printf("  %-5s  0x%016" PRIx64 "  % " PRIi64 "\n", #name, rg, rg)
+  /* cf */
+  printf("  <cf>  ");
+  if (ctx->cf & RVM_FEQ) printf(" EQ");
+  if (ctx->cf & RVM_FAB) printf(" AB");
+  if (ctx->cf & RVM_FGT) printf(" GT");
+  if (!ctx->cf) printf(" NOFLAGS");
+  putc('\n', stdout);
+  /* other regs */
   prnt_reg(<pc>,  ctx->pc);
-  prnt_reg(<cf>,  (rvm_reg_t)ctx->cf);
   prnt_reg(r0,  ctx->reg[RVM_R0]);
   prnt_reg(r1,  ctx->reg[RVM_R1]);
   prnt_reg(r2,  ctx->reg[RVM_R2]);
