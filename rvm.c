@@ -131,8 +131,11 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
 # define __RVM_DISPATCH __RVM_JMPNEXT *_disptab[RVM_OPC(inst)]
 
   static void * RVM_RESTRICT _disptab[RVM_OPNUM];
-  for (int i = 0; i < RVM_OPNUM; i++)
-    _disptab[i] = &&_notimpl;
+  { /* enclose `i` */
+    int i;
+    for (i = 0; i < RVM_OPNUM; i++)
+      _disptab[i] = &&_notimpl;
+  }
 
   # define DEF(op, idx) _disptab[(idx)] = (&&_H_##op);
   # include "opcodes.h"
