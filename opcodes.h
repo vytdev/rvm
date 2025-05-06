@@ -25,5 +25,7 @@ DEF(li,    3)   /* [M] Load fn19 to rgA, sign extended */
 DEF(j,     4)   /* [J] Uncond. pc-rel jump */
 DEF(cmp,   5)   /* [I] Compares two regs. */
 DEF(cmpi,  6)   /* [M] Compares a reg and a 19-bit imm. */
+DEF(add,   7)   /* [R] rgA = rgB + rgC */
+DEF(addi,  8)   /* [I] rgA = rgB + zxt(func15) */
 
 #endif /* opcodes.h */

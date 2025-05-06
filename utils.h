@@ -30,6 +30,7 @@
 #define RVM_UNSIGNEDMAX(n) ((1<<(n))-1)      /* 2^n - 1 */
 
 #define RVM_SGXTD(x, b) (((x)^((rvm_u64)1<<((b)-1)))-((rvm_u64)1<<((b)-1)))
+#define RVM_ZRXTD(x, b) ((x)&(((rvm_u64)1<<(b))-1))
 
 #define RVM_BSWAP32(v) \
   (((((v) & 0xff000000) >> 24) & 0x000000ff) | \

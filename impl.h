@@ -64,4 +64,14 @@ DEF(cmpi) {
   vmnext;
 }
 
+DEF(add) {
+  rgA = rgB + rgC;
+  vmnext;
+}
+
+DEF(addi) {
+  rgA = rgB + RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+  vmnext;
+}
+
 #endif /* impl.h */
