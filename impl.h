@@ -74,4 +74,14 @@ DEF(addi) {
   vmnext;
 }
 
+DEF(sub) {
+  rgA = rgB - rgC;
+  vmnext;
+}
+
+DEF(subi) {
+  rgA = rgB - RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+  vmnext;
+}
+
 #endif /* impl.h */
