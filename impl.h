@@ -23,7 +23,7 @@
   (((rvm_u64)(a) > (rvm_u64)(b)) << RVM_FABBP) | \
   (((rvm_i64)(a) > (rvm_i64)(b)) << RVM_FGTBP) );
 #define util_checkpc() do {   \
-    if (pc >= codesz) {       \
+    if (RVM_UNLIKELY(pc >= codesz)) { \
       inst = RVM_TRAP_EMEMV;  \
       __RVM_DISPATCH;         \
     } \
@@ -124,7 +124,7 @@ DEF(xori) {
 }
 
 DEF(div) {
-  if (rgC == 0) {
+  if (RVM_UNLIKELY(rgC == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = rgB / rgC;
@@ -132,7 +132,7 @@ DEF(div) {
 }
 
 DEF(divi) {
-  if (imm15u == 0) {
+  if (RVM_UNLIKELY(imm15u == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = rgB / imm15u;
@@ -140,7 +140,7 @@ DEF(divi) {
 }
 
 DEF(mod) {
-  if (rgC == 0) {
+  if (RVM_UNLIKELY(rgC == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = rgB % rgC;
@@ -148,7 +148,7 @@ DEF(mod) {
 }
 
 DEF(modi) {
-  if (imm15u == 0) {
+  if (RVM_UNLIKELY(imm15u == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = rgB % imm15u;
@@ -166,7 +166,7 @@ DEF(mulsi) {
 }
 
 DEF(divs) {
-  if (rgC == 0) {
+  if (RVM_UNLIKELY(rgC == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = (rvm_i64)rgB / (rvm_i64)rgC;
@@ -174,7 +174,7 @@ DEF(divs) {
 }
 
 DEF(divsi) {
-  if (imm15u == 0) {
+  if (RVM_UNLIKELY(imm15u == 0)) {
     vmbrk -RVM_EDIVZ;
   }
   rgA = (rvm_i64)rgB / (rvm_i64)imm15s;
@@ -240,7 +240,7 @@ DEF(jr) {
 }
 
 DEF(loop) {
-  if (rgA != 0) {
+  if (RVM_LIKELY(rgA != 0)) {
     rgA--;
     pc += imm19s;
     util_checkpc();
