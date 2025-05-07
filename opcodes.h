@@ -53,5 +53,6 @@ DEF(cpl,    31)   /* [I] rgA = ~rgB */
 DEF(neg,    32)   /* [I] rgA = -rgB */
 DEF(inc,    33)   /* [M] rgA = rgA + 1 */
 DEF(dec,    34)   /* [M] rgA = rgA - 1 */
+DEF(swp,    35)   /* [I] rgA, rgB = rgB, rgA */
 
 #endif /* opcodes.h */

@@ -221,4 +221,11 @@ DEF(dec) {
   vmnext;
 }
 
+DEF(swp) {
+  rvm_reg_t tmp = rgA;
+  rgA = rgB;
+  rgB = tmp;
+  vmnext;
+}
+
 #endif /* impl.h */
