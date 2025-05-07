@@ -113,4 +113,30 @@ DEF(modi) {
   vmnext;
 }
 
+DEF(muls) {
+  rgA = (rvm_i64)rgB * (rvm_i64)rgC;
+  vmnext;
+}
+
+DEF(mulsi) {
+  rgA = (rvm_i64)rgB * (rvm_i64)imm15s;
+  vmnext;
+}
+
+DEF(divs) {
+  if (rgC == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = (rvm_i64)rgB / (rvm_i64)rgC;
+  vmnext;
+}
+
+DEF(divsi) {
+  if (imm15u == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = (rvm_i64)rgB / (rvm_i64)imm15s;
+  vmnext;
+}
+
 #endif /* impl.h */

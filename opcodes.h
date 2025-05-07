@@ -41,5 +41,9 @@ DEF(div,    19)   /* [R] rgA = rgB / rgC */
 DEF(divi,   20)   /* [I] rgA = rgB / zxt(func15) */
 DEF(mod,    21)   /* [R] rgA = rgB % rgC */
 DEF(modi,   22)   /* [I] rgA = rgB % zxt(func15) */
+DEF(muls,   23)   /* [R] rgA = s(rgB) * s(rgC) */
+DEF(mulsi,  24)   /* [I] rgA = s(rgB) * sxt(func15) */
+DEF(divs,   25)   /* [R] rgA = s(rgB) / s(rgC) */
+DEF(divsi,  26)   /* [I] rgA = s(rgB) / sxt(func15) */
 
 #endif /* opcodes.h */
