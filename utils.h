@@ -53,4 +53,6 @@
 #define RVM_UNLIKELY(x)  (x)
 #endif
 
+#define RVM_UNUSED(x) ((void)(x))
+
 #endif /* utils.h */

@@ -124,6 +124,7 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   rvm_u64                    icnt    = ctx->inst_cnt;
 # endif
 
+  RVM_UNUSED(opts);
 
 /* Use computed gotos if available. */
 #if RVM_CFG_PREFER_COMP_GOTOS && (defined(__GNUC__) && \
