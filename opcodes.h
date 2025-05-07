@@ -45,5 +45,9 @@ DEF(muls,   23)   /* [R] rgA = s(rgB) * s(rgC) */
 DEF(mulsi,  24)   /* [I] rgA = s(rgB) * sxt(func15) */
 DEF(divs,   25)   /* [R] rgA = s(rgB) / s(rgC) */
 DEF(divsi,  26)   /* [I] rgA = s(rgB) / sxt(func15) */
+DEF(shl,    27)   /* [R] rgA = rgB << rgC */
+DEF(shli,   28)   /* [I] rgA = rgB << (fnc & 63) */
+DEF(shr,    29)   /* [R] rgA = rgB >> rgC */
+DEF(shri,   30)   /* [I] rgA = rgB >> (fnc & 63) */
 
 #endif /* opcodes.h */

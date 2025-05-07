@@ -139,4 +139,24 @@ DEF(divsi) {
   vmnext;
 }
 
+DEF(shl) {
+  rgA = rgB << (rgC & 63);
+  vmnext;
+}
+
+DEF(shli) {
+  rgA = rgB << (fnc & 63);
+  vmnext;
+}
+
+DEF(shr) {
+  rgA = rgB >> (rgC & 63);
+  vmnext;
+}
+
+DEF(shri) {
+  rgA = rgB >> (fnc & 63);
+  vmnext;
+}
+
 #endif /* impl.h */
