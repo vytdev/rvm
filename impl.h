@@ -29,13 +29,13 @@
     } \
   } while (0)
 
-#define gen_intop(n, t, op) \
+#define gen_intop(n, op) \
   DEF(n) { \
-    rgA = (t)rgB op (t)rgC; \
+    rgA = rgB op rgC; \
     vmnext; \
   } \
   DEF(n ## i) { \
-    rgA = (t)rgB op (t)RVM_ZRXTD(fnc & RVM_F15MASK, 15); \
+    rgA = rgB op imm15u; \
     vmnext; \
   }
 
@@ -54,12 +54,12 @@ DEF(trap) {
 }
 
 DEF(li) {
-  rgA = RVM_SGXTD(fnc & RVM_F19MASK, 19);
+  rgA = imm19s;
   vmnext;
 }
 
 DEF(j) {
-  pc += RVM_SGXTD(fnc, 23);
+  pc += imm23s;
   util_checkpc();
   vmnext;
 }
@@ -70,17 +70,16 @@ DEF(cmp) {
 }
 
 DEF(cmpi) {
-  rvm_reg_t imm = RVM_SGXTD(fnc & RVM_F19MASK, 19);
-  cf = util_icmp(rgA, imm);
+  cf = util_icmp(rgA, imm19s);
   vmnext;
 }
 
-gen_intop(add, rvm_u64, +);
-gen_intop(sub, rvm_u64, -);
-gen_intop(mul, rvm_u64, *);
-gen_intop(and, rvm_u64, &);
-gen_intop(orr, rvm_u64, |);
-gen_intop(xor, rvm_u64, ^);
+gen_intop(add, +);
+gen_intop(sub, -);
+gen_intop(mul, *);
+gen_intop(and, &);
+gen_intop(orr, |);
+gen_intop(xor, ^);
 
 DEF(div) {
   if (rgC == 0) {
@@ -91,11 +90,10 @@ DEF(div) {
 }
 
 DEF(divi) {
-  rvm_reg_t imm = RVM_ZRXTD(fnc & RVM_F15MASK, 15);
-  if (imm == 0) {
+  if (imm15u == 0) {
     vmbrk -RVM_EDIVZ;
   }
-  rgA = rgB / imm;
+  rgA = rgB / imm15u;
   vmnext;
 }
 
@@ -108,11 +106,10 @@ DEF(mod) {
 }
 
 DEF(modi) {
-  rvm_reg_t imm = RVM_ZRXTD(fnc & RVM_F15MASK, 15);
-  if (imm == 0) {
+  if (imm15u == 0) {
     vmbrk -RVM_EDIVZ;
   }
-  rgA = rgB % imm;
+  rgA = rgB % imm15u;
   vmnext;
 }
 

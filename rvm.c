@@ -89,6 +89,18 @@ const char *rvm_stropc(int opc)
 #define rgC reg[RVM_RGC(inst)]
 #define fnc     RVM_FNC(inst)
 
+#define imm11s  RVM_SGXTD(fnc & RVM_F11MASK, 11)
+#define imm11u  RVM_ZRXTD(fnc & RVM_F11MASK, 11)
+
+#define imm15s  RVM_SGXTD(fnc & RVM_F15MASK, 15)
+#define imm15u  RVM_ZRXTD(fnc & RVM_F15MASK, 15)
+
+#define imm19s  RVM_SGXTD(fnc & RVM_F19MASK, 19)
+#define imm19u  RVM_ZRXTD(fnc & RVM_F19MASK, 19)
+
+#define imm23s  RVM_SGXTD(fnc & RVM_F23MASK, 23)
+#define imm23u  RVM_ZRXTD(fnc & RVM_F23MASK, 23)
+
 /* Saving vm state. */
 #if RVM_CFG_COUNT_INSTRS_EXEC
 #  define __RVM_SAVEICNT()   (ctx->inst_cnt = icnt)
