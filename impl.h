@@ -233,4 +233,10 @@ DEF(adr) {
   vmnext;
 }
 
+DEF(jr) {
+  pc = rgA >> 2;
+  util_checkpc();
+  vmnext;
+}
+
 #endif /* impl.h */

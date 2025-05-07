@@ -55,5 +55,6 @@ DEF(inc,    33)   /* [M] rgA = rgA + 1 */
 DEF(dec,    34)   /* [M] rgA = rgA - 1 */
 DEF(swp,    35)   /* [I] rgA, rgB = rgB, rgA */
 DEF(adr,    36)   /* [M] rgA = pc + imm19s */
+DEF(jr,     37)   /* [M] pc = rgA */
 
 #endif /* opcodes.h */
