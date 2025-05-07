@@ -10,19 +10,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v4
+
     - uses: egor-tensin/setup-gcc@v1
       with:
         version: latest
+
     - run: |
         sudo apt install -y make
+
     - name: Build
       run: make -j test
 
-  benchmark:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - name: Benchmark
       run: |
         set +e
