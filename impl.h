@@ -29,17 +29,6 @@
     } \
   } while (0)
 
-#define gen_intop(n, op) \
-  DEF(n) { \
-    rgA = rgB op rgC; \
-    vmnext; \
-  } \
-  DEF(n ## i) { \
-    rgA = rgB op imm15u; \
-    vmnext; \
-  }
-
-
 DEF(nop) {
   vmnext;
 }
@@ -74,12 +63,65 @@ DEF(cmpi) {
   vmnext;
 }
 
-gen_intop(add, +);
-gen_intop(sub, -);
-gen_intop(mul, *);
-gen_intop(and, &);
-gen_intop(orr, |);
-gen_intop(xor, ^);
+DEF(add) {
+  rgA = rgB + rgC;
+  vmnext;
+}
+
+DEF(addi) {
+  rgA = rgB + imm15u;
+  vmnext;
+}
+
+DEF(sub) {
+  rgA = rgB - rgC;
+  vmnext;
+}
+
+DEF(subi) {
+  rgA = rgB - imm15u;
+  vmnext;
+}
+
+DEF(mul) {
+  rgA = rgB * rgC;
+  vmnext;
+}
+
+DEF(muli) {
+  rgA = rgB * imm15u;
+  vmnext;
+}
+
+DEF(and) {
+  rgA = rgB & rgC;
+  vmnext;
+}
+
+DEF(andi) {
+  rgA = rgB & imm15u;
+  vmnext;
+}
+
+DEF(orr) {
+  rgA = rgB | rgC;
+  vmnext;
+}
+
+DEF(orri) {
+  rgA = rgB | imm15u;
+  vmnext;
+}
+
+DEF(xor) {
+  rgA = rgB ^ rgC;
+  vmnext;
+}
+
+DEF(xori) {
+  rgA = rgB ^ imm15u;
+  vmnext;
+}
 
 DEF(div) {
   if (rgC == 0) {
