@@ -239,4 +239,13 @@ DEF(jr) {
   vmnext;
 }
 
+DEF(loop) {
+  if (rgA != 0) {
+    rgA--;
+    pc += imm19s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
 #endif /* impl.h */
