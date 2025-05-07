@@ -92,6 +92,7 @@
 #define RVM_ERR          1    /* Error */
 #define RVM_EUINST       2    /* Illegal instruction */
 #define RVM_EMEMV        3    /* Memory fault */
+#define RVM_EDIVZ        4    /* Division by zero */
 #define RVM_EHOST        32   /* Host defined (>32) */
 
 enum rvm_opcode {

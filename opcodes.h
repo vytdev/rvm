@@ -18,16 +18,28 @@
 
 #if defined(DEF)
 
-DEF(nop,   0)   /* [*] No-op */
-DEF(mov,   1)   /* [M] Move across regs */
-DEF(trap,  2)   /* [J] Trigger an exception */
-DEF(li,    3)   /* [M] Load fn19 to rgA, sign extended */
-DEF(j,     4)   /* [J] Uncond. pc-rel jump */
-DEF(cmp,   5)   /* [I] Compares two regs. */
-DEF(cmpi,  6)   /* [M] Compares a reg and a 19-bit imm. */
-DEF(add,   7)   /* [R] rgA = rgB + rgC */
-DEF(addi,  8)   /* [I] rgA = rgB + zxt(func15) */
-DEF(sub,   9)   /* [R] rgA = rgB - rgC */
-DEF(subi, 10)   /* [I] rgA = rgB - zxt(func15) */
+DEF(nop,     0)   /* [*] No-op */
+DEF(mov,     1)   /* [M] Move across regs */
+DEF(trap,    2)   /* [J] Trigger an exception */
+DEF(li,      3)   /* [M] Load fn19 to rgA, sign extended */
+DEF(j,       4)   /* [J] Uncond. pc-rel jump */
+DEF(cmp,     5)   /* [I] Compares two regs. */
+DEF(cmpi,    6)   /* [M] Compares a reg and a 19-bit imm. */
+DEF(add,     7)   /* [R] rgA = rgB + rgC */
+DEF(addi,    8)   /* [I] rgA = rgB + zxt(func15) */
+DEF(sub,     9)   /* [R] rgA = rgB - rgC */
+DEF(subi,   10)   /* [I] rgA = rgB - zxt(func15) */
+DEF(mul,    11)   /* [R] rgA = rgB * rgC */
+DEF(muli,   12)   /* [I] rgA = rgB * zxt(func15) */
+DEF(and,    13)   /* [R] rgA = rgB & rgC */
+DEF(andi,   14)   /* [I] rgA = rgB & zxt(func15) */
+DEF(orr,    15)   /* [R] rgA = rgB | rgC */
+DEF(orri,   16)   /* [I] rgA = rgB | zxt(func15) */
+DEF(xor,    17)   /* [R] rgA = rgB ^ rgC */
+DEF(xori,   18)   /* [I] rgA = rgB ^ zxt(func15) */
+DEF(div,    19)   /* [R] rgA = rgB / rgC */
+DEF(divi,   20)   /* [I] rgA = rgB / zxt(func15) */
+DEF(mod,    21)   /* [R] rgA = rgB % rgC */
+DEF(modi,   22)   /* [I] rgA = rgB % zxt(func15) */
 
 #endif /* opcodes.h */

@@ -29,6 +29,17 @@
     } \
   } while (0)
 
+#define gen_intop(n, t, op) \
+  DEF(n) { \
+    rgA = (t)rgB op (t)rgC; \
+    vmnext; \
+  } \
+  DEF(n ## i) { \
+    rgA = (t)rgB op (t)RVM_ZRXTD(fnc & RVM_F15MASK, 15); \
+    vmnext; \
+  }
+
+
 DEF(nop) {
   vmnext;
 }
@@ -64,23 +75,44 @@ DEF(cmpi) {
   vmnext;
 }
 
-DEF(add) {
-  rgA = rgB + rgC;
+gen_intop(add, rvm_u64, +);
+gen_intop(sub, rvm_u64, -);
+gen_intop(mul, rvm_u64, *);
+gen_intop(and, rvm_u64, &);
+gen_intop(orr, rvm_u64, |);
+gen_intop(xor, rvm_u64, ^);
+
+DEF(div) {
+  if (rgC == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = rgB / rgC;
   vmnext;
 }
 
-DEF(addi) {
-  rgA = rgB + RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+DEF(divi) {
+  rvm_reg_t imm = RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+  if (imm == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = rgB / imm;
   vmnext;
 }
 
-DEF(sub) {
-  rgA = rgB - rgC;
+DEF(mod) {
+  if (rgC == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = rgB % rgC;
   vmnext;
 }
 
-DEF(subi) {
-  rgA = rgB - RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+DEF(modi) {
+  rvm_reg_t imm = RVM_ZRXTD(fnc & RVM_F15MASK, 15);
+  if (imm == 0) {
+    vmbrk -RVM_EDIVZ;
+  }
+  rgA = rgB % imm;
   vmnext;
 }
 

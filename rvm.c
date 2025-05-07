@@ -66,6 +66,7 @@ const char *rvm_strstat(signed e)
   case RVM_ERR:       return "Error";
   case RVM_EUINST:    return "Illegal instruction";
   case RVM_EMEMV:     return "Memory fault";
+  case RVM_EDIVZ:     return "Division by zero";
   default:            return "<reserved>";
   }
 }
