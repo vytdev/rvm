@@ -211,4 +211,14 @@ DEF(neg) {
   vmnext;
 }
 
+DEF(inc) {
+  rgA++;
+  vmnext;
+}
+
+DEF(dec) {
+  rgA--;
+  vmnext;
+}
+
 #endif /* impl.h */
