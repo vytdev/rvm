@@ -26,25 +26,25 @@ DEF(j,       4)   /* [J] Uncond. pc-rel jump */
 DEF(cmp,     5)   /* [I] Compares two regs. */
 DEF(cmpi,    6)   /* [M] Compares a reg and a 19-bit imm. */
 DEF(add,     7)   /* [R] rgA = rgB + rgC */
-DEF(addi,    8)   /* [I] rgA = rgB + zxt(func15) */
+DEF(addi,    8)   /* [I] rgA = rgB + imm15u */
 DEF(sub,     9)   /* [R] rgA = rgB - rgC */
-DEF(subi,   10)   /* [I] rgA = rgB - zxt(func15) */
+DEF(subi,   10)   /* [I] rgA = rgB - imm15u */
 DEF(mul,    11)   /* [R] rgA = rgB * rgC */
-DEF(muli,   12)   /* [I] rgA = rgB * zxt(func15) */
+DEF(muli,   12)   /* [I] rgA = rgB * imm15u */
 DEF(and,    13)   /* [R] rgA = rgB & rgC */
-DEF(andi,   14)   /* [I] rgA = rgB & zxt(func15) */
+DEF(andi,   14)   /* [I] rgA = rgB & imm15u */
 DEF(orr,    15)   /* [R] rgA = rgB | rgC */
-DEF(orri,   16)   /* [I] rgA = rgB | zxt(func15) */
+DEF(orri,   16)   /* [I] rgA = rgB | imm15u */
 DEF(xor,    17)   /* [R] rgA = rgB ^ rgC */
-DEF(xori,   18)   /* [I] rgA = rgB ^ zxt(func15) */
+DEF(xori,   18)   /* [I] rgA = rgB ^ imm15u */
 DEF(div,    19)   /* [R] rgA = rgB / rgC */
-DEF(divi,   20)   /* [I] rgA = rgB / zxt(func15) */
+DEF(divi,   20)   /* [I] rgA = rgB / imm15u */
 DEF(mod,    21)   /* [R] rgA = rgB % rgC */
-DEF(modi,   22)   /* [I] rgA = rgB % zxt(func15) */
+DEF(modi,   22)   /* [I] rgA = rgB % imm15u */
 DEF(muls,   23)   /* [R] rgA = s(rgB) * s(rgC) */
-DEF(mulsi,  24)   /* [I] rgA = s(rgB) * sxt(func15) */
+DEF(mulsi,  24)   /* [I] rgA = s(rgB) * imm15s */
 DEF(divs,   25)   /* [R] rgA = s(rgB) / s(rgC) */
-DEF(divsi,  26)   /* [I] rgA = s(rgB) / sxt(func15) */
+DEF(divsi,  26)   /* [I] rgA = s(rgB) / imm15s */
 DEF(shl,    27)   /* [R] rgA = rgB << rgC */
 DEF(shli,   28)   /* [I] rgA = rgB << (fnc & 63) */
 DEF(shr,    29)   /* [R] rgA = rgB >> rgC */
@@ -54,5 +54,6 @@ DEF(neg,    32)   /* [I] rgA = -rgB */
 DEF(inc,    33)   /* [M] rgA = rgA + 1 */
 DEF(dec,    34)   /* [M] rgA = rgA - 1 */
 DEF(swp,    35)   /* [I] rgA, rgB = rgB, rgA */
+DEF(adr,    36)   /* [M] rgA = pc + imm19s */
 
 #endif /* opcodes.h */

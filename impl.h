@@ -228,4 +228,9 @@ DEF(swp) {
   vmnext;
 }
 
+DEF(adr) {
+  rgA = (pc << 2) + imm19s;
+  vmnext;
+}
+
 #endif /* impl.h */
