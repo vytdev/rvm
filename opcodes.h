@@ -49,5 +49,7 @@ DEF(shl,    27)   /* [R] rgA = rgB << rgC */
 DEF(shli,   28)   /* [I] rgA = rgB << (fnc & 63) */
 DEF(shr,    29)   /* [R] rgA = rgB >> rgC */
 DEF(shri,   30)   /* [I] rgA = rgB >> (fnc & 63) */
+DEF(cpl,    31)   /* [I] rgA = ~rgB */
+DEF(neg,    32)   /* [I] rgA = -rgB */
 
 #endif /* opcodes.h */

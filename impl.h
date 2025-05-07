@@ -201,4 +201,14 @@ DEF(shri) {
   vmnext;
 }
 
+DEF(cpl) {
+  rgA = ~rgB;
+  vmnext;
+}
+
+DEF(neg) {
+  rgA = -rgB;
+  vmnext;
+}
+
 #endif /* impl.h */
