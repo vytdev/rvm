@@ -28,6 +28,12 @@
       __RVM_DISPATCH;         \
     } \
   } while (0)
+#define util_jmpif(expr, pcoff) do { \
+    if ((expr)) {       \
+      pc += (pcoff);    \
+      util_checkpc();   \
+    } \
+  } while (0)
 
 DEF(nop) {
   vmnext;
@@ -249,82 +255,52 @@ DEF(loop) {
 }
 
 DEF(je) {
-  if (hasf(RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(hasf(RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jne) {
-  if (!hasf(RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(!hasf(RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jg) {
-  if (hasf(RVM_FGT)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(hasf(RVM_FGT), imm23s);
   vmnext;
 }
 
 DEF(ja) {
-  if (hasf(RVM_FAB)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(hasf(RVM_FAB), imm23s);
   vmnext;
 }
 
 DEF(jl) {
-  if (!hasf(RVM_FGT | RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(!hasf(RVM_FGT | RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jb) {
-  if (!hasf(RVM_FAB | RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(!hasf(RVM_FAB | RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jge) {
-  if (hasf(RVM_FGT) || hasf(RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(hasf(RVM_FGT) || hasf(RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jae) {
-  if (hasf(RVM_FAB) || hasf(RVM_FEQ)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(hasf(RVM_FAB) || hasf(RVM_FEQ), imm23s);
   vmnext;
 }
 
 DEF(jle) {
-  if (!hasf(RVM_FGT)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(!hasf(RVM_FGT), imm23s);
   vmnext;
 }
 
 DEF(jbe) {
-  if (!hasf(RVM_FAB)) {
-    pc += imm23s;
-    util_checkpc();
-  }
+  util_jmpif(!hasf(RVM_FAB), imm23s);
   vmnext;
 }
 
