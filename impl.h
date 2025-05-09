@@ -248,4 +248,20 @@ DEF(loop) {
   vmnext;
 }
 
+DEF(je) {
+  if (hasf(RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jne) {
+  if (!hasf(RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
 #endif /* impl.h */

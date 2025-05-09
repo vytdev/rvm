@@ -57,5 +57,7 @@ DEF(swp,    35)   /* [I] rgA, rgB = rgB, rgA */
 DEF(adr,    36)   /* [M] rgA = pc + imm19s */
 DEF(jr,     37)   /* [M] pc = rgA */
 DEF(loop,   38)   /* [M] if (rgA-- != 0) pc += imm19s */
+DEF(je,     39)   /* [J] jump if eq */
+DEF(jne,    40)   /* [J] jump if not-eq */
 
 #endif /* opcodes.h */

@@ -101,6 +101,10 @@ const char *rvm_stropc(int opc)
 #define imm23s  RVM_SGXTD(fnc & RVM_F23MASK, 23)
 #define imm23u  RVM_ZRXTD(fnc & RVM_F23MASK, 23)
 
+#define setf(v)  (cf |= (v))
+#define hasf(v)  ((cf & (v)) == (v))
+#define clrf()   (cf = 0)
+
 /* Saving vm state. */
 #if RVM_CFG_COUNT_INSTRS_EXEC
 #  define __RVM_SAVEICNT()   (ctx->inst_cnt = icnt)
