@@ -264,4 +264,36 @@ DEF(jne) {
   vmnext;
 }
 
+DEF(jg) {
+  if (hasf(RVM_FGT)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(ja) {
+  if (hasf(RVM_FAB)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jl) {
+  if (!hasf(RVM_FGT | RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jb) {
+  if (!hasf(RVM_FAB | RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
 #endif /* impl.h */

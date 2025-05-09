@@ -59,5 +59,9 @@ DEF(jr,     37)   /* [M] pc = rgA */
 DEF(loop,   38)   /* [M] if (rgA-- != 0) pc += imm19s */
 DEF(je,     39)   /* [J] jump if eq */
 DEF(jne,    40)   /* [J] jump if not-eq */
+DEF(jg,     41)   /* [J] jump if gt */
+DEF(ja,     42)   /* [J] jump if ab */
+DEF(jl,     43)   /* [J] jump if not-gt and not-eq */
+DEF(jb,     44)   /* [J] jump if not-ab and not-eq */
 
 #endif /* opcodes.h */
