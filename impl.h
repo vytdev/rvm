@@ -296,4 +296,36 @@ DEF(jb) {
   vmnext;
 }
 
+DEF(jge) {
+  if (hasf(RVM_FGT) || hasf(RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jae) {
+  if (hasf(RVM_FAB) || hasf(RVM_FEQ)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jle) {
+  if (!hasf(RVM_FGT)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
+DEF(jbe) {
+  if (!hasf(RVM_FAB)) {
+    pc += imm23s;
+    util_checkpc();
+  }
+  vmnext;
+}
+
 #endif /* impl.h */

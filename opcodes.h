@@ -63,5 +63,9 @@ DEF(jg,     41)   /* [J] jump if gt */
 DEF(ja,     42)   /* [J] jump if ab */
 DEF(jl,     43)   /* [J] jump if not-gt and not-eq */
 DEF(jb,     44)   /* [J] jump if not-ab and not-eq */
+DEF(jge,    45)   /* [J] jump if gt or eq */
+DEF(jae,    46)   /* [J] jump if ab or eq */
+DEF(jle,    47)   /* [J] jump if not-gt */
+DEF(jbe,    48)   /* [J] jump if not-ab */
 
 #endif /* opcodes.h */
