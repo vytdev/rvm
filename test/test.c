@@ -37,6 +37,8 @@ static void dump_benchmark(struct rvm *ctx, tstamp elapsed)
 #  endif
 #endif
 
+#define MEMSZ (1<<26) /* 64MB */
+
 
 static void dump_state(struct rvm *ctx, signed stat)
 {
@@ -93,7 +95,7 @@ static char *load_file(const char *path, rvm_uint *memsz,
   rvm_uint sz = ftell(fp);
   fseek(fp, 0, SEEK_SET);
 
-  rvm_uint reqmem = rvm_calcfmem(sz);
+  rvm_uint reqmem = rvm_calcfmem(MEMSZ);
 
   char *mem = (char*)malloc(reqmem);
   if (!mem) {
@@ -149,6 +151,7 @@ int main(int argc, char **argv)
     return 1;
   struct rvm ctx = rvm_new(mem, memsz);
   ctx.pc = 0;
+  ctx.reg[RVM_RSP] = ctx.memsz;
 
   #if defined(BENCH_)
   tstamp start = get_tstamp();
