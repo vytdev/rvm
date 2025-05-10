@@ -1,0 +1,22 @@
+10005003:    li r1, #40
+00000239:    call fib
+00000002:    trap #0x0
+
+             fib:
+10000206:    cmpi r1, #1
+0000042a:    ja _eval
+01000001:    mov r0, r1
+0000003b:    ret
+             _eval:
+ff00080a:    subi sp, sp, #4
+2f000036:    wr32 r2, #0(sp)
+10000022:    dec r1
+fffff039:    call fib
+20000001:    mov r2, r0
+10000022:    dec r1
+ffffea39:    call fib
+00200007:    add r0, r0, r2
+11000408:    addi r1, r1, #2
+2f000035:    rd32 r2, #0(sp)
+ff000808:    addi sp, sp, #4
+0000003b:    ret

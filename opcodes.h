@@ -75,5 +75,8 @@ DEF(rd32,   53)   /* [I] 4B: rgA = mem[rgB + imm15s] */
 DEF(wr32,   54)   /* [I] 4B: mem[rgB + imm15s] = rgA */
 DEF(rd64,   55)   /* [I] 8B: rgA = mem[rgB + imm15s] */
 DEF(wr64,   56)   /* [I] 8B: mem[rgB + imm15s] = rgA */
+DEF(call,   57)   /* [J] call a subroutine */
+DEF(callr,  58)   /* [M] call a subroutine from reg addr */
+DEF(ret,    59)   /* [J] return to caller */
 
 #endif /* opcodes.h */

@@ -362,4 +362,33 @@ DEF(wr64) {
   vmnext;
 }
 
+DEF(call) {
+  rvm_reg_t s_top = reg[RVM_RSP] -= 8;
+  util_checkaccs(s_top, 8);
+  RVM_ENC64(pc << 2, &mem[s_top]);
+  /* jump to addr */
+  pc += imm23s;
+  util_checkpc();
+  vmnext;
+}
+
+DEF(callr) {
+  rvm_reg_t s_top = reg[RVM_RSP] -= 8;
+  util_checkaccs(s_top, 8);
+  RVM_ENC64(pc << 2, &mem[s_top]);
+  /* jump to addr in reg */
+  pc += rgA >> 2;
+  util_checkpc();
+  vmnext;
+}
+
+DEF(ret) {
+  rvm_reg_t s_top = reg[RVM_RSP];
+  util_checkaccs(s_top, 8);
+  pc = RVM_DEC64(&mem[s_top]) >> 2;
+  reg[RVM_RSP] += 8;   /* dealloc 8 bytes from stack */
+  util_checkpc();
+  vmnext;
+}
+
 #endif /* impl.h */
