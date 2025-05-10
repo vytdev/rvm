@@ -67,5 +67,7 @@ DEF(jge,    45)   /* [J] jump if gt or eq */
 DEF(jae,    46)   /* [J] jump if ab or eq */
 DEF(jle,    47)   /* [J] jump if not-gt */
 DEF(jbe,    48)   /* [J] jump if not-ab */
+DEF(rd8,    49)   /* [I] rgA = mem[rgB + imm15s] */
+DEF(wr8,    50)   /* [I] mem[rgB + imm15s] = rgA */
 
 #endif /* opcodes.h */

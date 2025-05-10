@@ -22,11 +22,13 @@
   (((a) == (b))                  << RVM_FEQBP) | \
   (((rvm_u64)(a) > (rvm_u64)(b)) << RVM_FABBP) | \
   (((rvm_i64)(a) > (rvm_i64)(b)) << RVM_FGTBP) );
-#define util_checkpc() do {   \
-    if (RVM_UNLIKELY(pc >= codesz)) { \
-      inst = RVM_TRAP_EMEMV;  \
-      __RVM_DISPATCH;         \
-    } \
+#define util_checkpc() do {         \
+    if (RVM_UNLIKELY(pc >= codesz)) \
+      return -RVM_EMEMV;            \
+  } while (0)
+#define util_checkaccs(addr, sz) do {        \
+    if (RVM_UNLIKELY((addr) > memsz - (sz))) \
+      return -RVM_EMEMV;                     \
   } while (0)
 #define util_jmpif(expr, pcoff) do { \
     if ((expr)) {       \
@@ -301,6 +303,20 @@ DEF(jle) {
 
 DEF(jbe) {
   util_jmpif(!hasf(RVM_FAB), imm23s);
+  vmnext;
+}
+
+DEF(rd8) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 1);
+  rgA = RVM_DEC8(&mem[addr]);
+  vmnext;
+}
+
+DEF(wr8) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 1);
+  RVM_ENC8(rgA, &mem[addr]);
   vmnext;
 }
 
