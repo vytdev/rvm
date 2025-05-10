@@ -320,4 +320,46 @@ DEF(wr8) {
   vmnext;
 }
 
+DEF(rd16) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 2);
+  rgA = RVM_DEC16(&mem[addr]);
+  vmnext;
+}
+
+DEF(wr16) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 2);
+  RVM_ENC16(rgA, &mem[addr]);
+  vmnext;
+}
+
+DEF(rd32) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 4);
+  rgA = RVM_DEC32(&mem[addr]);
+  vmnext;
+}
+
+DEF(wr32) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 4);
+  RVM_ENC32(rgA, &mem[addr]);
+  vmnext;
+}
+
+DEF(rd64) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 8);
+  rgA = RVM_DEC64(&mem[addr]);
+  vmnext;
+}
+
+DEF(wr64) {
+  rvm_reg_t addr = rgB + imm15s;
+  util_checkaccs(addr, 8);
+  RVM_ENC64(rgA, &mem[addr]);
+  vmnext;
+}
+
 #endif /* impl.h */

@@ -67,7 +67,13 @@ DEF(jge,    45)   /* [J] jump if gt or eq */
 DEF(jae,    46)   /* [J] jump if ab or eq */
 DEF(jle,    47)   /* [J] jump if not-gt */
 DEF(jbe,    48)   /* [J] jump if not-ab */
-DEF(rd8,    49)   /* [I] rgA = mem[rgB + imm15s] */
-DEF(wr8,    50)   /* [I] mem[rgB + imm15s] = rgA */
+DEF(rd8,    49)   /* [I] 1B: rgA = mem[rgB + imm15s] */
+DEF(wr8,    50)   /* [I] 1B: mem[rgB + imm15s] = rgA */
+DEF(rd16,   51)   /* [I] 2B: rgA = mem[rgB + imm15s] */
+DEF(wr16,   52)   /* [I] 2B: mem[rgB + imm15s] = rgA */
+DEF(rd32,   53)   /* [I] 4B: rgA = mem[rgB + imm15s] */
+DEF(wr32,   54)   /* [I] 4B: mem[rgB + imm15s] = rgA */
+DEF(rd64,   55)   /* [I] 8B: rgA = mem[rgB + imm15s] */
+DEF(wr64,   56)   /* [I] 8B: mem[rgB + imm15s] = rgA */
 
 #endif /* opcodes.h */
