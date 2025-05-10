@@ -30,4 +30,6 @@ jobs:
         ./test/test ./test/cnt_1bill
         echo "nops"
         ./test/test ./test/nops
+        echo "naive_fib_40"
+        ./test/test ./test/naive_fib_40
         exit 0
