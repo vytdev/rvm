@@ -50,8 +50,8 @@ struct rvm rvm_new(void *mem, rvm_uint memsz)
 
 rvm_uint rvm_calcfmem(rvm_uint sz)
 {
-  /* align up + trap instruction */
-  return (sz + (RVM_INLN << 1) - 1) & ~(RVM_INLN - 1);
+  /* align up + trap instruction + extra */
+  return ((sz + (RVM_INLN << 1) - 1) & ~(RVM_INLN - 1)) + 32;
 }
 
 const char *rvm_strstat(signed e)
