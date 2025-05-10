@@ -29,7 +29,7 @@
 #define RVM_COPYRIGHT  "Copyright (C) 2024-2025  Vincent Yanzee J. Tan"
 
 #define RVM_ARCH       0     /* Architecture version. */
-#define RVM_IMPL       1     /* Implementation patch number. */
+#define RVM_IMPL       2     /* Implementation patch number. */
 #define RVM_VERSION    (RVM_ARCH * 1000L + RVM_IMPL)
 
 #define RVM_VERSTR     RVM_STR2(RVM_ARCH) "." RVM_STR2(RVM_IMPL)
