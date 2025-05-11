@@ -166,9 +166,9 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   #include "impl.h"
   #undef DEF
 
-  return -RVM_ERR;
+  vmbrk -RVM_ERR;
   _notimpl:
-  return -RVM_EUINST;
+  vmbrk -RVM_EUINST;
 
 
 /* Fallback to switch dispatch. */
@@ -181,9 +181,9 @@ signed rvm_exec(struct rvm *RVM_RESTRICT ctx)
   # define DEF(op) case (RVM_OP_##op):
   # include "impl.h"
   # undef DEF
-  default: return -RVM_EUINST;
+  default: vmbrk -RVM_EUINST;
   }
-  return -RVM_ERR;
+  vmbrk -RVM_ERR;
 
 #endif
 }
