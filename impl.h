@@ -22,13 +22,15 @@
   (((a) == (b))                  << RVM_FEQBP) | \
   (((rvm_u64)(a) > (rvm_u64)(b)) << RVM_FABBP) | \
   (((rvm_i64)(a) > (rvm_i64)(b)) << RVM_FGTBP) );
-#define util_checkpc() do {         \
-    if (RVM_UNLIKELY(pc >= codesz)) \
-      return -RVM_EMEMV;            \
+#define util_checkpc() do {           \
+    if (RVM_UNLIKELY(pc >= codesz)) { \
+      vmbrk -RVM_EMEMV;               \
+    } \
   } while (0)
-#define util_checkaccs(addr, sz) do {        \
-    if (RVM_UNLIKELY((addr) > memsz - (sz))) \
-      return -RVM_EMEMV;                     \
+#define util_checkaccs(addr, sz) do {          \
+    if (RVM_UNLIKELY((addr) > memsz - (sz))) { \
+      vmbrk -RVM_EMEMV;                        \
+    } \
   } while (0)
 #define util_jmpif(expr, pcoff) do { \
     if ((expr)) {       \
