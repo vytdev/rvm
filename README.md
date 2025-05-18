@@ -27,7 +27,7 @@ these decent specs:
 | Test           | Elapsed time | Inst Count          | Avg TPI | Inst Rate  |
 | :------------: | :----------: | :-----------------: | :-----: | :--------: |
 | `nops`         | 3.651 ms     | 1048576 (1.05 M)    | 3.482ns | 287.2M IPS |
-| `cnt_1bill`    | 9.509 secs   | 1000000006 (1.01 B) | 8.317ns | 105.2M IPS |
+| `cnt_1bill`    | 9.509 secs   | 1000000006 (1 B)    | 8.317ns | 105.2M IPS |
 | `naive_fib_40` | 18.662 secs  | 2980442527 (2.98 B) | 6.262ns | 159.7M IPS |
 
 CI benchmarks (GitHub-hosted runner):
